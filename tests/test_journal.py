@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness import Case, Response, compare  # noqa: E402
-from scaffold_harness.journal import Journal, ResumeError  # noqa: E402
+from scaffold_harness import Case, Response, compare
+from scaffold_harness.journal import Journal, ResumeError
 
 
 def cases(count: int) -> list[Case]:

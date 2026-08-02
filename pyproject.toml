@@ -25,3 +25,16 @@ where = ["src"]
 [tool.ruff]
 line-length = 90
 target-version = "py310"
+
+# Les règles sont déclarées explicitement pour que la barrière d'intégration
+# continue ne change pas de comportement quand ruff sort une nouvelle version.
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "BLE", "ISC", "RUF"]
+# Le dépôt est bilingue: guillemets français, apostrophes typographiques et
+# espaces insécables sont voulus, pas des homoglyphes accidentels.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# Des doublures d'une ligne: la lambda dit ce qu'elle fait mieux qu'un `def`
+# nommé à usage unique. La règle garde tout son sens dans `src/`.
+"tests/*" = ["E731"]

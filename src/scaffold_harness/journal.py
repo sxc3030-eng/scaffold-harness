@@ -97,7 +97,9 @@ class Journal:
             stream.write(json.dumps(asdict(response), ensure_ascii=False) + "\n")
             stream.flush()
 
-    def wrap(self, name: str, path: Callable[[Case], Response]) -> Callable[[Case], Response]:
+    def wrap(
+        self, name: str, path: Callable[[Case], Response]
+    ) -> Callable[[Case], Response]:
         """Enveloppe un chemin pour qu'il n'appelle jamais deux fois le même cas."""
         already = self.recorded(name)
 

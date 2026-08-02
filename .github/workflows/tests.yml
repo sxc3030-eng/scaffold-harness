@@ -1,0 +1,46 @@
+# Barrière avant tout le reste.
+#
+# La suite est entièrement hermétique — aucun appel réseau, aucun GPU, aucun
+# modèle — donc elle tourne partout et en quelques secondes. C'est un choix de
+# conception, pas une chance: des tests qui exigent un fournisseur ne tournent
+# jamais en intégration continue, et finissent par ne plus tourner du tout.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Le harnais n'a jamais tourné ailleurs que sur une machine Windows.
+        # La matrice existe pour découvrir ce que ça cache — encodages,
+        # séparateurs de chemin, fins de ligne.
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: install
+        run: pip install -e .
+      - name: tests
+        run: python -m unittest discover -s tests -v
+        env:
+          PYTHONPATH: tests
+          PYTHONIOENCODING: utf-8
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check src tests

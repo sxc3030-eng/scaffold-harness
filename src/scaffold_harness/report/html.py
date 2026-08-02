@@ -151,7 +151,11 @@ def _cases_section(lang: str, report: Mapping[str, Any]) -> str:
         )
 
     truncated = (
-        f'<div class="note">{escape(t(lang, "cases.truncated", shown=len(rows), total=report["case_count"]))}</div>'
+        '<div class="note">'
+        + escape(
+            t(lang, "cases.truncated", shown=len(rows), total=report["case_count"])
+        )
+        + "</div>"
         if report.get("cases_truncated")
         else ""
     )
@@ -185,7 +189,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
     total_calls = report["case_count"] * (1 + len(variants))
     if failures:
         warnings += (
-            f'<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
+            '<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
             + escape(t(lang, "warn.failures", count=failures, total=total_calls,
                        limit=f"{report.get('max_failure_rate', 0.05):.0%}"))
             + "</div>"
@@ -193,7 +197,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
     disagreements = report.get("scorer_disagreements") or []
     if disagreements:
         warnings += (
-            f'<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
+            '<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
             + escape(t(lang, "warn.scorer", count=len(disagreements)))
             + "</div>"
         )
@@ -238,6 +242,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
             f"<td class='muted'>p={row['mcnemar_p']:.3f}</td></tr>"
         )
 
+    changed_note = escape(t(lang, "section.changed.note", reference=str(reference)))
     what = "".join(f"<p>{block}</p>" for block in WHAT[lang])
     faq = "".join(
         f"<details><summary>{escape(question)}</summary><p>{escape(answer)}</p></details>"
@@ -261,7 +266,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
 {verdicts}
 
 <h2>{escape(t(lang, "section.changed"))}</h2>
-<div class="note">{escape(t(lang, "section.changed.note", reference=str(reference)))}</div>
+<div class="note">{changed_note}</div>
 <table><thead><tr>
 <th>{escape(t(lang, "col.variant"))}</th><th>{escape(t(lang, "col.changed"))}</th>
 <th>{escape(t(lang, "col.improved"))}</th><th>{escape(t(lang, "col.destroyed"))}</th>
@@ -302,17 +307,21 @@ def render(report: Mapping[str, Any], lang: str | None = None) -> str:
     if lang is not None:
         chosen = normalise(lang)
         body = f'<div data-lang="{chosen}">{_section(chosen, report)}</div>'
-        script = f'<script>document.documentElement.setAttribute("lang","{chosen}");</script>'
+        script = (
+            "<script>document.documentElement"
+            f'.setAttribute("lang","{chosen}");</script>'
+        )
     else:
         body = "".join(
             f'<div data-lang="{code}">{_section(code, report)}</div>' for code in LANGS
         )
         script = f"<script>{SCRIPT}</script>"
+    signature = escape(str(report.get("report_sha256", "")))
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scaffold report</title><style>{CSS}</style></head><body>
 {body}
-<footer>{escape(t("en", "signature"))}: {escape(str(report.get("report_sha256", "")))}</footer>
+<footer>{escape(t("en", "signature"))}: {signature}</footer>
 {script}
 </body></html>"""

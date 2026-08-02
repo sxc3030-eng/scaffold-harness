@@ -61,7 +61,11 @@ class PythonPath:
                 refused=True,
                 input_tokens=estimate_tokens(case.question),
             )
-        except Exception as error:  # l'échafaudage a planté: erreur, pas refus
+        except Exception as error:  # noqa: BLE001
+            # Volontairement large: on mesure le code de quelqu'un d'autre, et
+            # il peut lever n'importe quoi. Un plantage de l'échafaudage est un
+            # échec DE CE CAS — le laisser remonter ferait tomber la campagne
+            # entière et perdrait tous les appels déjà payés.
             return Response(
                 case_id=case.case_id,
                 answer=None,

@@ -26,9 +26,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness import Case, Response, compare  # noqa: E402
-from scaffold_harness.report import build, render  # noqa: E402
-from scaffold_harness.stats import mcnemar_exact, wilson_interval  # noqa: E402
+from scaffold_harness import Case, Response, compare
+from scaffold_harness.report import build, render
+from scaffold_harness.stats import mcnemar_exact, wilson_interval
 
 
 def scorer(response: Response, case: Case) -> bool:
@@ -99,9 +99,10 @@ class MetamorphicTests(unittest.TestCase):
         cases, good, bad = build_set(50, 14)
         forward = compare(cases, path_from(good), {"v": path_from(bad)}, scorer)
         backward = compare(cases, path_from(bad), {"v": path_from(good)}, scorer)
-        self.assertEqual(forward.variants[0].paired_losses, backward.variants[0].paired_wins)
-        self.assertEqual(forward.variants[0].paired_wins, backward.variants[0].paired_losses)
-        self.assertAlmostEqual(forward.variants[0].mcnemar_p, backward.variants[0].mcnemar_p)
+        first, second = forward.variants[0], backward.variants[0]
+        self.assertEqual(first.paired_losses, second.paired_wins)
+        self.assertEqual(first.paired_wins, second.paired_losses)
+        self.assertAlmostEqual(first.mcnemar_p, second.mcnemar_p)
 
     def test_deviation_matches_paired_counts_when_reference_is_the_baseline(self) -> None:
         # Sans référence déterministe, «détruites» doit coïncider exactement
@@ -125,8 +126,8 @@ class KnownStatisticsTests(unittest.TestCase):
         self.assertEqual(mcnemar_exact(5, 5), 1.0)           # parfaitement symétrique
 
     def test_mcnemar_never_leaves_the_unit_interval(self) -> None:
-        for left in range(0, 25):
-            for right in range(0, 25):
+        for left in range(25):
+            for right in range(25):
                 value = mcnemar_exact(left, right)
                 self.assertGreaterEqual(value, 0.0)
                 self.assertLessEqual(value, 1.0)
@@ -158,7 +159,7 @@ class DegenerateInputTests(unittest.TestCase):
 
     def test_a_path_that_refuses_everything_reports_zero_coverage(self) -> None:
         cases, good, _ = build_set(20)
-        silent = lambda case: Response(case.case_id, None, refused=True)  # noqa: E731
+        silent = lambda case: Response(case.case_id, None, refused=True)
         report = compare(cases, path_from(good), {"mute": silent}, scorer)
         row = report.variants[0].as_dict()
         self.assertEqual(row["coverage"], 0.0)
@@ -167,7 +168,7 @@ class DegenerateInputTests(unittest.TestCase):
 
     def test_a_path_that_crashes_everywhere_is_not_confused_with_refusal(self) -> None:
         cases, good, _ = build_set(15)
-        broken = lambda case: Response(  # noqa: E731
+        broken = lambda case: Response(
             case.case_id, None, contract_valid=False, refused=False, raw="boom"
         )
         report = compare(cases, path_from(good), {"broken": broken}, scorer)
@@ -182,7 +183,7 @@ class DegenerateInputTests(unittest.TestCase):
 
     def test_missing_answers_on_both_sides_count_as_unchanged(self) -> None:
         cases = [Case("a", "q", target="1")]
-        empty = lambda case: Response(case.case_id, None)  # noqa: E731
+        empty = lambda case: Response(case.case_id, None)
         report = compare(cases, empty, {"v": empty}, scorer)
         self.assertEqual(report.variants[0].deviation_vs_reference.unchanged, 1)
 
@@ -190,7 +191,7 @@ class DegenerateInputTests(unittest.TestCase):
 class HostileContentTests(unittest.TestCase):
     def test_markup_in_questions_and_answers_never_reaches_the_page(self) -> None:
         cases = [Case("x", "<script>alert('q')</script>", target="<b>t</b>")]
-        attack = lambda case: Response(  # noqa: E731
+        attack = lambda case: Response(
             case.case_id, "<img src=x onerror=alert('a')>"
         )
         report = compare(cases, path_from({"x": "<b>t</b>"}), {"v": attack}, scorer)
@@ -201,7 +202,7 @@ class HostileContentTests(unittest.TestCase):
 
     def test_a_hundred_thousand_character_answer_does_not_blow_up_the_page(self) -> None:
         cases = [Case("x", "q", target="1")]
-        flood = lambda case: Response(case.case_id, "9" * 100_000)  # noqa: E731
+        flood = lambda case: Response(case.case_id, "9" * 100_000)
         report = compare(cases, path_from({"x": "1"}), {"v": flood}, scorer)
         page = render(build(report, {}, {}, {"name": "flood"}))
         self.assertLess(len(page), 200_000)  # la réponse est écourtée
@@ -278,7 +279,7 @@ class ProviderFailureTests(unittest.TestCase):
 
     def test_failures_are_counted_apart_from_wrong_and_refused(self) -> None:
         cases, good, _ = build_set(20)
-        broken = lambda case: Response(  # noqa: E731
+        broken = lambda case: Response(
             case.case_id, None, contract_valid=False, failed=True
         )
         report = compare(cases, path_from(good), {"down": broken}, scorer)
@@ -291,7 +292,7 @@ class ProviderFailureTests(unittest.TestCase):
         # Sans ce garde-fou, une API tombée produirait un «LOSS» retentissant
         # qui n'apprend rien sur l'échafaudage.
         cases, good, _ = build_set(100)
-        half = lambda case: Response(  # noqa: E731
+        half = lambda case: Response(
             case.case_id,
             None if int(case.case_id[1:]) < 40 else good[case.case_id],
             failed=int(case.case_id[1:]) < 40,
@@ -302,7 +303,7 @@ class ProviderFailureTests(unittest.TestCase):
 
     def test_a_few_failures_do_not_silence_a_real_verdict(self) -> None:
         cases, good, bad = build_set(200, 60)
-        one_bad = lambda case: Response(  # noqa: E731
+        one_bad = lambda case: Response(
             case.case_id,
             None if case.case_id == "c0" else bad[case.case_id],
             failed=case.case_id == "c0",
@@ -328,10 +329,10 @@ class ScorerAuditTests(unittest.TestCase):
         # son outil à côté. 43 réponses, toutes dans les bras qui recevaient une
         # proposition d'expert.
         cases = [Case(f"c{i}", f"q{i}", target="7") for i in range(10)]
-        chatty = lambda case: Response(  # noqa: E731
+        chatty = lambda case: Response(
             case.case_id, "7", raw='{"answer":"7","source":"tool"}'
         )
-        picky = lambda response, case: response.raw == '{"answer":"7"}'  # noqa: E731
+        picky = lambda response, case: response.raw == '{"answer":"7"}'
         report = compare(
             cases, chatty, {"v": chatty}, scorer, audit_scorer=picky
         )
@@ -343,8 +344,8 @@ class ScorerAuditTests(unittest.TestCase):
 
     def test_the_report_carries_the_warning(self) -> None:
         cases = [Case("a", "q", target="1")]
-        path = lambda case: Response(case.case_id, "1")  # noqa: E731
-        never = lambda response, case: False  # noqa: E731
+        path = lambda case: Response(case.case_id, "1")
+        never = lambda response, case: False
         artefact = build(
             compare(cases, path, {"v": path}, scorer, audit_scorer=never),
             {}, {}, {"name": "audit"},

@@ -11,13 +11,16 @@ Sert aussi de test de bout en bout : ce fichier est chargé par le CLI via
 from __future__ import annotations
 
 import json
+import os
 import re
 from fractions import Fraction
 
 from scaffold_harness.adapters import OllamaChat, Refusal
 from scaffold_harness.core import Case
 
-MODEL = "llama3.2:latest"
+# Modèle volontairement petit: l'exemple doit tourner sur une machine modeste.
+# Surchargeable, parce que personne n'a exactement le même catalogue local.
+MODEL = os.environ.get("SCAFFOLD_DEMO_MODEL", "llama3.2:latest")
 EXPRESSION = re.compile(r"[-+]?\d+/\d+(?:\s*[-+]\s*\d+/\d+)*")
 
 CONTRACT = (
@@ -49,6 +52,26 @@ def executor(question: str) -> str:
 
 
 _CHAT = OllamaChat(model=MODEL, system=CONTRACT, max_tokens=64)
+
+
+def require_model() -> None:
+    """Échoue tôt et clairement si le modèle de l'exemple n'est pas installé.
+
+    Un exemple qui plante avec une trace d'erreur HTTP au bout de trois minutes
+    fait fuir; un message d'une ligne au démarrage, non.
+    """
+    if _CHAT.model_digest() is None:
+        raise SystemExit(
+            "\n".join(
+                (
+                    f"Le modèle « {MODEL} » n'est pas disponible sur Ollama.",
+                    f"    ollama pull {MODEL}",
+                    "ou choisissez-en un autre :",
+                    "    SCAFFOLD_DEMO_MODEL=mistral:7b-instruct-q4_0"
+                    " scaffold-harness run config.json",
+                )
+            )
+        )
 
 
 def verify_scaffold(case: Case):

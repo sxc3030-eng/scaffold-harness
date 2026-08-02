@@ -192,28 +192,28 @@ STRINGS: dict[str, dict[str, str]] = {
 # quelqu'un qui reçoit le rapport sans connaître l'outil.
 WHAT: dict[str, list[str]] = {
     "en": [
-        "Benchmarks tell you how a <em>model</em> scores. This report tells you "
+        ("Benchmarks tell you how a <em>model</em> scores. This report tells you "
         "what the layer you built <em>on top of it</em> — an agent, a RAG "
-        "pipeline, a router, a verification step — actually adds or removes.",
-        "Every question is answered twice: once by the bare model, once through "
+        "pipeline, a router, a verification step — actually adds or removes."),
+        ("Every question is answered twice: once by the bare model, once through "
         "your layer. Because the two runs are paired on the same questions, the "
         "report can count the answers your layer <strong>changed</strong>, and "
         "say whether each change made things better or worse. An aggregate "
         "score cannot do that: a layer that fixes 8 answers and breaks 5 looks "
-        "like “+3” and hides the 13 questions it touched.",
+        "like “+3” and hides the 13 questions it touched."),
     ],
     "fr": [
-        "Les benchmarks vous disent le score d'un <em>modèle</em>. Ce rapport "
+        ("Les benchmarks vous disent le score d'un <em>modèle</em>. Ce rapport "
         "vous dit ce que la couche que vous avez construite <em>par-dessus</em> "
         "— un agent, une chaîne RAG, un routeur, une étape de vérification — "
-        "ajoute ou retire réellement.",
-        "Chaque question reçoit deux réponses : celle du modèle nu, et celle qui "
+        "ajoute ou retire réellement."),
+        ("Chaque question reçoit deux réponses : celle du modèle nu, et celle qui "
         "passe par votre couche. Comme les deux passages sont appariés sur les "
         "mêmes questions, le rapport peut compter les réponses que votre couche "
         "a <strong>modifiées</strong>, et dire si chaque modification a amélioré "
         "ou dégradé le résultat. Un score agrégé ne le peut pas : une couche qui "
         "corrige 8 réponses et en casse 5 affiche « +3 » et masque les 13 "
-        "questions qu'elle a touchées.",
+        "questions qu'elle a touchées."),
     ],
 }
 
@@ -221,75 +221,75 @@ FAQ: dict[str, list[tuple[str, str]]] = {
     "en": [
         (
             "Why does it sometimes refuse to conclude?",
-            "Because a difference can be real and still be unprovable at this "
+            ("Because a difference can be real and still be unprovable at this "
             "sample size. Four losses and zero gains looks decisive, but the "
             "exact test gives p = 0.125 — one run in eight would show that by "
-            "chance alone. A tool that always finds something is worth nothing.",
+            "chance alone. A tool that always finds something is worth nothing."),
         ),
         (
             "What does “destroyed” mean exactly?",
-            "Your layer changed an answer that the reference path had right, "
+            ("Your layer changed an answer that the reference path had right, "
             "and the new answer is wrong. It is counted separately from "
             "“improved” — the reverse case — because the two cancel out in any "
-            "aggregate score and tell you completely different things.",
+            "aggregate score and tell you completely different things."),
         ),
         (
             "What is the reference path?",
-            "By default, the bare model — everyone has one. If you also have a "
+            ("By default, the bare model — everyone has one. If you also have a "
             "deterministic path (a calculator, a solver, a database lookup), "
             "point the harness at it: changes are then counted against "
-            "something known to be right, which is far sharper.",
+            "something known to be right, which is far sharper."),
         ),
         (
             "Is a refusal the same as a wrong answer?",
-            "No, and the distinction matters. A system that refuses 90% of "
+            ("No, and the distinction matters. A system that refuses 90% of "
             "questions and a system that answers 90% of them wrongly score the "
-            "same on accuracy alone. Coverage separates them.",
+            "same on accuracy alone. Coverage separates them."),
         ),
         (
             "Can I trust these numbers?",
-            "You can check them. The report carries a hash of its own contents, "
+            ("You can check them. The report carries a hash of its own contents, "
             "of the question set, and of every path that ran. Nothing is "
-            "promoted automatically, and the reproduction command is included.",
+            "promoted automatically, and the reproduction command is included."),
         ),
     ],
     "fr": [
         (
             "Pourquoi refuse-t-il parfois de conclure ?",
-            "Parce qu'une différence peut être réelle et rester indémontrable à "
+            ("Parce qu'une différence peut être réelle et rester indémontrable à "
             "cette taille d'échantillon. Quatre pertes et zéro gain semble net, "
             "mais le test exact donne p = 0,125 — une fois sur huit, le hasard "
             "seul produirait ça. Un outil qui trouve toujours quelque chose ne "
-            "vaut rien.",
+            "vaut rien."),
         ),
         (
             "Que veut dire « détruite » exactement ?",
-            "Votre couche a modifié une réponse que le chemin de référence "
+            ("Votre couche a modifié une réponse que le chemin de référence "
             "avait juste, et la nouvelle est fausse. C'est compté séparément "
             "des « améliorées » — le cas inverse — parce que les deux "
             "s'annulent dans un score agrégé et ne disent pas du tout la même "
-            "chose.",
+            "chose."),
         ),
         (
             "Qu'est-ce que le chemin de référence ?",
-            "Par défaut, le modèle nu — tout le monde en a un. Si vous disposez "
+            ("Par défaut, le modèle nu — tout le monde en a un. Si vous disposez "
             "aussi d'un chemin déterministe (calculateur, solveur, requête en "
             "base), branchez-le : les modifications sont alors comptées contre "
             "quelque chose dont on sait que c'est juste, ce qui est bien plus "
-            "tranchant.",
+            "tranchant."),
         ),
         (
             "Un refus est-il équivalent à une mauvaise réponse ?",
-            "Non, et la distinction compte. Un système qui refuse 90 % des "
+            ("Non, et la distinction compte. Un système qui refuse 90 % des "
             "questions et un système qui y répond mal à 90 % obtiennent la même "
-            "exactitude. C'est la couverture qui les sépare.",
+            "exactitude. C'est la couverture qui les sépare."),
         ),
         (
             "Puis-je faire confiance à ces chiffres ?",
-            "Vous pouvez les vérifier. Le rapport porte l'empreinte de son "
+            ("Vous pouvez les vérifier. Le rapport porte l'empreinte de son "
             "propre contenu, du jeu de questions, et de chaque chemin exécuté. "
             "Rien n'est promu automatiquement, et la commande de reproduction "
-            "est incluse.",
+            "est incluse."),
         ),
     ],
 }

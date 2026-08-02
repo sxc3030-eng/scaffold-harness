@@ -7,14 +7,14 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness import Case, Response, compare  # noqa: E402
-from scaffold_harness.adapters import (  # noqa: E402
+from scaffold_harness import Case, Response, compare
+from scaffold_harness.adapters import (
     OllamaChat,
     OpenAICompatibleChat,
     PythonPath,
     Refusal,
 )
-from scaffold_harness.scoring import exact_rational  # noqa: E402
+from scaffold_harness.scoring import exact_rational
 
 CASE = Case(case_id="c0", question="2+2 ?", target="4")
 
@@ -188,7 +188,8 @@ class AnthropicTests(unittest.TestCase):
     def test_text_blocks_are_joined_and_key_stays_private(self) -> None:
         from scaffold_harness.adapters import AnthropicChat
 
-        payload = {"content": [{"type": "text", "text": "3/"}, {"type": "text", "text": "4"}]}
+        blocks = [{"type": "text", "text": "3/"}, {"type": "text", "text": "4"}]
+        payload = {"content": blocks}
         adapter = AnthropicChat(model="m", api_key="tres-secret")
         with mock.patch(
             "scaffold_harness.adapters.anthropic.post_json", return_value=payload
@@ -244,9 +245,8 @@ class ResilienceTests(unittest.TestCase):
             raise urllib.error.HTTPError("u", 400, "Bad", {}, None)
 
         with mock.patch("scaffold_harness.adapters.base.urllib.request.urlopen",
-                        side_effect=opener):
-            with self.assertRaises(AdapterError):
-                post_json("http://x/y", {}, attempts=3, backoff=0)
+                        side_effect=opener), self.assertRaises(AdapterError):
+            post_json("http://x/y", {}, attempts=3, backoff=0)
         self.assertEqual(len(calls), 1)
 
     def test_a_provider_failure_costs_one_case_not_the_run(self) -> None:

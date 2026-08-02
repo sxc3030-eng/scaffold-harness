@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness.cli import ConfigError, load_questions, main  # noqa: E402
+from scaffold_harness.cli import ConfigError, load_questions, main
 
 
 def write_questions(folder: Path, count: int = 12) -> Path:
@@ -88,20 +88,30 @@ class RunTests(unittest.TestCase):
     def test_a_harmless_layer_exits_zero(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            code = main(["run", str(self.config(root, "perfect")), "--out", str(root / "o")])
+            code = main(
+                ["run", str(self.config(root, "perfect")), "--out", str(root / "o")]
+            )
             self.assertEqual(code, 0)
-            report = json.loads((root / "o" / "report.json").read_text(encoding="utf-8"))
-            self.assertEqual(report["variants"][0]["deviation_vs_reference"]["destroyed"], 0)
+            report = json.loads(
+                (root / "o" / "report.json").read_text(encoding="utf-8")
+            )
+            deviation = report["variants"][0]["deviation_vs_reference"]
+            self.assertEqual(deviation["destroyed"], 0)
             self.assertTrue((root / "o" / "report.html").is_file())
 
     def test_a_destructive_layer_exits_non_zero(self) -> None:
         # Un code non nul permet d'en faire une barrière d'intégration continue.
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            code = main(["run", str(self.config(root, "wrecker")), "--out", str(root / "o")])
+            code = main(
+                ["run", str(self.config(root, "wrecker")), "--out", str(root / "o")]
+            )
             self.assertEqual(code, 2)
-            report = json.loads((root / "o" / "report.json").read_text(encoding="utf-8"))
-            self.assertEqual(report["variants"][0]["deviation_vs_reference"]["destroyed"], 6)
+            report = json.loads(
+                (root / "o" / "report.json").read_text(encoding="utf-8")
+            )
+            deviation = report["variants"][0]["deviation_vs_reference"]
+            self.assertEqual(deviation["destroyed"], 6)
 
     def test_an_unknown_scorer_is_refused_with_the_available_list(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
@@ -177,6 +187,41 @@ class ResumeTests(unittest.TestCase):
             main(["run", str(path), "--out", str(root / "o")])
             write_questions(root, 20)  # le jeu a changé
             self.assertEqual(main(["run", str(path), "--out", str(root / "o")]), 4)
+
+
+class SmokeAndLimitTests(unittest.TestCase):
+    def test_smoke_proves_the_install_without_a_model(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.assertEqual(main(["smoke", "--out", str(root)]), 0)
+            report = json.loads((root / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["case_count"], 3)
+            self.assertTrue((root / "report.html").is_file())
+
+    def test_limit_shortens_the_run_and_is_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_questions(root, 30)
+            path = root / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": str(root / "questions.jsonl"),
+                        "baseline": {"adapter": "python", "import": "test_cli:perfect"},
+                        "variants": {
+                            "layer": {"adapter": "python", "import": "test_cli:perfect"}
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            main(["run", str(path), "--out", str(root / "o"), "--limit", "7"])
+            report = json.loads(
+                (root / "o" / "report.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(report["case_count"], 7)
+            # La troncature doit être visible dans le rapport, pas silencieuse.
+            self.assertEqual(report["question_set"]["limited_to"], 7)
 
 if __name__ == "__main__":
     unittest.main()

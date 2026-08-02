@@ -7,15 +7,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness import Case, Response  # noqa: E402
-from scaffold_harness.provenance import (  # noqa: E402
+from scaffold_harness import Case, Response
+from scaffold_harness.provenance import (
     campaign_digest,
     question_set_digest,
     sign,
     verify,
     write_atomic,
 )
-from scaffold_harness.scoring import (  # noqa: E402
+from scaffold_harness.scoring import (
     exact_rational,
     json_field,
     multiple_choice,

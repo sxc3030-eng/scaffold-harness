@@ -111,10 +111,75 @@ def build_path(spec: Mapping[str, Any]) -> Any:
     raise ConfigError(f"adaptateur inconnu: {kind!r}")
 
 
-def run_config(config: Mapping[str, Any], out: Path, lang: str | None) -> int:
+SMOKE_QUESTIONS = [
+    {"case_id": "s1", "question": "1/2 + 1/3 ?", "target": "5/6"},
+    {"case_id": "s2", "question": "3/4 - 1/4 ?", "target": "1/2"},
+    {"case_id": "s3", "question": "2/3 + 2/3 ?", "target": "4/3"},
+]
+
+
+def smoke(out: Path, lang: str | None) -> int:
+    """Vérifie l'installation en trois questions, sans modèle ni réseau.
+
+    Un inconnu qui découvre l'outil doit pouvoir constater qu'il fonctionne et
+    voir à quoi ressemble un rapport, avant de construire un jeu de questions.
+    Sans ça, la première expérience est une page blanche.
+    """
+    cases = [
+        Case(case_id=row["case_id"], question=row["question"], target=row["target"])
+        for row in SMOKE_QUESTIONS
+    ]
+    truth = {"s1": "5/6", "s2": "1/2", "s3": "4/3"}
+    exact = PythonPath(lambda question: truth[_lookup(cases, question)], name="exact")
+    sloppy = PythonPath(
+        lambda question: (
+            "0.83"
+            if _lookup(cases, question) == "s1"
+            else truth[_lookup(cases, question)]
+        ),
+        name="rounds-the-first-one",
+    )
+    comparison = compare(cases, exact, {"rounding-layer": sloppy}, exact_rational)
+    report = build(
+        comparison,
+        exact.descriptor(),
+        {"rounding-layer": sloppy.descriptor()},
+        {"name": "built-in smoke set", "count": len(cases),
+         "sha256": question_set_digest(case.question for case in cases)},
+        reproduction="scaffold-harness smoke",
+    )
+    out.mkdir(parents=True, exist_ok=True)
+    write_atomic(out / "report.json", report)
+    (out / "report.html").write_text(render(report, lang), encoding="utf-8")
+    print("installation fonctionnelle.")
+    print(headline(report, lang or "en"))
+    print(f"\n{out / 'report.html'}")
+    return 0
+
+
+def _lookup(cases: list[Case], question: str) -> str:
+    for case in cases:
+        if case.question == question:
+            return case.case_id
+    raise KeyError(question)
+
+
+def run_config(
+    config: Mapping[str, Any], out: Path, lang: str | None, limit: int | None = None
+) -> int:
     if "baseline" not in config or "variants" not in config:
         raise ConfigError("la configuration exige 'baseline' et 'variants'")
     cases, question_set = load_questions(config["questions"])
+    if limit is not None and limit < len(cases):
+        # Passe rapide avant d'engager un run complet: sur une API payante, on
+        # veut voir la mécanique tourner avant de dépenser des milliers d'appels.
+        cases = cases[:limit]
+        question_set = {
+            **question_set,
+            "count": len(cases),
+            "sha256": question_set_digest(case.question for case in cases),
+            "limited_to": limit,
+        }
 
     scorer_name = str(config.get("scorer", "exact_rational"))
     scorer = SCORERS.get(scorer_name)
@@ -194,7 +259,9 @@ def run_config(config: Mapping[str, Any], out: Path, lang: str | None) -> int:
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(
         prog="scaffold-harness",
-        description="Measure whether the layer you built on top of an LLM helps or hurts.",
+        description=(
+            "Measure whether the layer you built on top of an LLM helps or hurts."
+        ),
     )
     subcommands = value.add_subparsers(dest="command", required=True)
     run = subcommands.add_parser("run", help="run a comparison from a config file")
@@ -202,14 +269,23 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--out", type=Path, default=Path("scaffold-report"))
     run.add_argument("--lang", choices=("en", "fr"), default=None,
                      help="single-language report; both are embedded by default")
+    run.add_argument("--limit", type=int, default=None,
+                     help="only the first N questions — a cheap dry run")
+    check = subcommands.add_parser(
+        "smoke", help="verify the install on three built-in questions, no model needed"
+    )
+    check.add_argument("--out", type=Path, default=Path("scaffold-smoke"))
+    check.add_argument("--lang", choices=("en", "fr"), default=None)
     return value
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
+        if args.command == "smoke":
+            return smoke(args.out, args.lang)
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-        return run_config(config, args.out, args.lang)
+        return run_config(config, args.out, args.lang, args.limit)
     except ConfigError as error:
         print(f"configuration: {error}", file=sys.stderr)
         return 3

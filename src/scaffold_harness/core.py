@@ -224,7 +224,7 @@ def _percentile95(values: Sequence[float]) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
-    index = min(len(ordered) - 1, int(round(0.95 * (len(ordered) - 1))))
+    index = min(len(ordered) - 1, round(0.95 * (len(ordered) - 1)))
     return ordered[index]
 
 
@@ -371,7 +371,8 @@ def compare(
 
     disagreements: list[str] = []
     if audit_scorer is not None:
-        for name, responses in {"baseline": baseline_responses, **variant_responses}.items():
+        audited = {"baseline": baseline_responses, **variant_responses}
+        for name, responses in audited.items():
             for case in ordered:
                 response = responses[case.case_id]
                 first = bool(scorer(response, case))

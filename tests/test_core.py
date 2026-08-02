@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scaffold_harness import Case, Response, compare  # noqa: E402
-from scaffold_harness.stats import mcnemar_exact, wilson_interval  # noqa: E402
+from scaffold_harness import Case, Response, compare
+from scaffold_harness.stats import mcnemar_exact, wilson_interval
 
 
 def cases(count: int) -> list[Case]:
@@ -122,7 +122,7 @@ class ComparisonTests(unittest.TestCase):
     def test_refusals_are_reported_as_coverage_not_as_errors(self) -> None:
         rows = cases(10)
         bare = fixed({f"c{i}": str(i) for i in range(10)})
-        partial = lambda case: Response(  # noqa: E731
+        partial = lambda case: Response(
             case_id=case.case_id,
             answer=None if int(case.case_id[1:]) >= 3 else case.target,
             refused=int(case.case_id[1:]) >= 3,
