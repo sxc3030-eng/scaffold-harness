@@ -7,7 +7,7 @@ observée peut être du bruit.
 
 from __future__ import annotations
 
-from math import comb, sqrt
+from math import comb, exp, lgamma, log, sqrt
 
 # Valeur critique de la loi normale pour un intervalle bilatéral à 95 %.
 Z95 = 1.959963984540054
@@ -33,7 +33,16 @@ def wilson_interval(successes: int, total: int, z: float = Z95) -> tuple[float, 
         / denominator
         * sqrt(proportion * (1 - proportion) / total + z * z / (4 * total * total))
     )
-    return (max(0.0, centre - spread), min(1.0, centre + spread))
+    low, high = max(0.0, centre - spread), min(1.0, centre + spread)
+    # Deux bornes sont exactes mathématiquement et doivent l'être numériquement:
+    # une proportion de 1 a pour borne haute 1, une proportion de 0 a pour borne
+    # basse 0. L'arithmétique flottante rend 0,9999999999999999, ce qui produit
+    # un intervalle qui n'encadre pas sa propre proportion.
+    if successes == total:
+        high = 1.0
+    if successes == 0:
+        low = 0.0
+    return (low, high)
 
 
 def mcnemar_exact(only_left: int, only_right: int) -> float:
@@ -52,5 +61,18 @@ def mcnemar_exact(only_left: int, only_right: int) -> float:
     if discordant == 0:
         return 1.0
     smaller = min(only_left, only_right)
-    tail = sum(comb(discordant, index) for index in range(smaller + 1))
-    return min(1.0, 2.0 * tail / (2**discordant))
+    if discordant <= 900:
+        tail = sum(comb(discordant, index) for index in range(smaller + 1))
+        return min(1.0, 2.0 * tail / (2**discordant))
+    # Au-delà, `2**discordant` sort de la plage des flottants et la division
+    # lève `OverflowError`. Un run de plusieurs milliers de paires discordantes
+    # — exactement le cas d'un échafaudage franchement destructeur sur un gros
+    # corpus — ne doit pas faire tomber la notation. On passe en logarithmes.
+    log_terms = [
+        lgamma(discordant + 1) - lgamma(index + 1) - lgamma(discordant - index + 1)
+        for index in range(smaller + 1)
+    ]
+    peak = max(log_terms)
+    log_tail = peak + log(sum(exp(term - peak) for term in log_terms))
+    log_p = log(2.0) + log_tail - discordant * log(2.0)
+    return min(1.0, exp(log_p)) if log_p > -700.0 else 0.0
