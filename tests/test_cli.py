@@ -161,10 +161,12 @@ class ResumeTests(unittest.TestCase):
                 encoding="utf-8",
             )
             reset_counter()
-            main(["run", str(path), "--out", str(root / "o")])
+            # Préchauffage désactivé: il est orthogonal à la reprise et
+            # ajouterait un appel par chemin à chaque lancement.
+            main(["run", str(path), "--out", str(root / "o"), "--no-warmup"])
             first = calls_made()
             self.assertEqual(first, 24)  # 12 questions x 2 chemins
-            main(["run", str(path), "--out", str(root / "o")])
+            main(["run", str(path), "--out", str(root / "o"), "--no-warmup"])
             self.assertEqual(calls_made(), first)  # aucun appel supplémentaire
 
     def test_changing_the_questions_refuses_to_resume(self) -> None:
@@ -222,6 +224,58 @@ class SmokeAndLimitTests(unittest.TestCase):
             self.assertEqual(report["case_count"], 7)
             # La troncature doit être visible dans le rapport, pas silencieuse.
             self.assertEqual(report["question_set"]["limited_to"], 7)
+
+
+class WarmupTests(unittest.TestCase):
+    def test_the_discarded_first_call_does_not_reach_the_journal(self) -> None:
+        # Le préchauffage absorbe le chargement du modèle. Il ne doit ni être
+        # mesuré, ni consommer une entrée de journal — sinon il deviendrait la
+        # réponse enregistrée pour le premier cas.
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_questions(root, 5)
+            path = root / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": str(root / "questions.jsonl"),
+                        "baseline": {"adapter": "python", "import": "test_cli:counted"},
+                        "variants": {
+                            "layer": {"adapter": "python", "import": "test_cli:counted"}
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            reset_counter()
+            main(["run", str(path), "--out", str(root / "o")])
+            # 5 questions x 2 chemins, plus un appel de préchauffage par chemin.
+            self.assertEqual(calls_made(), 12)
+            journal = (root / "o" / "journal" / "baseline.jsonl").read_text(
+                encoding="utf-8"
+            )
+            self.assertEqual(len([r for r in journal.splitlines() if r.strip()]), 5)
+
+    def test_warmup_can_be_turned_off(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_questions(root, 5)
+            path = root / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": str(root / "questions.jsonl"),
+                        "baseline": {"adapter": "python", "import": "test_cli:counted"},
+                        "variants": {
+                            "layer": {"adapter": "python", "import": "test_cli:counted"}
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            reset_counter()
+            main(["run", str(path), "--out", str(root / "o"), "--no-warmup"])
+            self.assertEqual(calls_made(), 10)
 
 if __name__ == "__main__":
     unittest.main()

@@ -107,6 +107,7 @@ class VariantResult:
     mean_input_tokens: float
     mean_output_tokens: float
     p95_latency_ms: float
+    median_latency_ms: float
     token_ratio_vs_baseline: float
     latency_ratio_vs_baseline: float
 
@@ -130,6 +131,10 @@ class VariantResult:
             "mean_input_tokens": self.mean_input_tokens,
             "mean_output_tokens": self.mean_output_tokens,
             "p95_latency_ms": self.p95_latency_ms,
+            # La médiane à côté du p95: sur quelques dizaines d'appels, une
+            # seule valeur aberrante — un chargement de modèle, une contention
+            # — renverse le p95 et fait dire au rapport l'inverse du vrai.
+            "median_latency_ms": self.median_latency_ms,
             "token_ratio_vs_baseline": self.token_ratio_vs_baseline,
             "latency_ratio_vs_baseline": self.latency_ratio_vs_baseline,
         }
@@ -218,6 +223,16 @@ class ComparisonReport:
             "baseline": self.baseline.as_dict(),
             "variants": [row.as_dict() for row in self.variants],
         }
+
+
+def _median(values: Sequence[float]) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2
 
 
 def _percentile95(values: Sequence[float]) -> float:
@@ -330,6 +345,7 @@ def compare(
         )
         latencies = [row.latency_ms for row in responses.values()]
         p95 = _percentile95(latencies)
+        median = _median(latencies)
         mean_in = sum(row.input_tokens for row in responses.values()) / total
         mean_out = sum(row.output_tokens for row in responses.values()) / total
         base_tokens = sum(
@@ -358,6 +374,7 @@ def compare(
             mean_input_tokens=mean_in,
             mean_output_tokens=mean_out,
             p95_latency_ms=p95,
+            median_latency_ms=median,
             token_ratio_vs_baseline=(mean_in + mean_out) / base_tokens
             if base_tokens
             else 1.0,

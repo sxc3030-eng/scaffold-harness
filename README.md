@@ -111,6 +111,18 @@ attempt to sandbox it.
 API keys go in the config and are used to call your provider; they are never
 written into the report — only a boolean saying a key was present.
 
+## Cold start
+
+The first call to a local model pays for loading it — measured at 3.3 s against a
+339 ms median on a real run, ten times the median. Whichever path runs first
+carries that cost alone, and a p95 over a few dozen calls is decided by a single
+outlier: one report claimed a scaffold was four times *faster* when it was
+actually 2.4 times slower per call.
+
+Every run therefore begins with one discarded call per path (`--no-warmup` to
+skip it), and the cost table reports the **median beside the p95** so a single
+outlier can no longer flip the reading without showing itself.
+
 ## Resuming
 
 Every run keeps an append-only journal. Relaunching the same config into the

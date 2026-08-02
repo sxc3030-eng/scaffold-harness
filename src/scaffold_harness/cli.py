@@ -165,7 +165,11 @@ def _lookup(cases: list[Case], question: str) -> str:
 
 
 def run_config(
-    config: Mapping[str, Any], out: Path, lang: str | None, limit: int | None = None
+    config: Mapping[str, Any],
+    out: Path,
+    lang: str | None,
+    limit: int | None = None,
+    warmup: bool = True,
 ) -> int:
     if "baseline" not in config or "variants" not in config:
         raise ConfigError("la configuration exige 'baseline' et 'variants'")
@@ -208,6 +212,20 @@ def run_config(
         "reference": descriptor(reference) if reference is not None else None,
         "variants": {name: descriptor(path) for name, path in variants.items()},
     }
+    # Préchauffage: le premier appel d'un chemin paie le chargement du modèle —
+    # mesuré à 3,3 s contre 339 ms de médiane sur un run réel. Sans ça, le
+    # chemin exécuté en premier porte seul ce coût et le rapport peut annoncer
+    # qu'un échafaudage est «quatre fois plus rapide» alors qu'il est deux fois
+    # plus lent. Le résultat du préchauffage est jeté et n'entre pas au journal.
+    if warmup and cases:
+        for path in [baseline, *variants.values()] + (
+            [reference] if reference is not None else []
+        ):
+            try:
+                path(cases[0])
+            except Exception:  # noqa: BLE001 — un échec de préchauffage n'est pas une mesure
+                pass
+
     resuming = journal.guard(manifest)
     already = journal.progress()
     if resuming and already:
@@ -271,6 +289,8 @@ def parser() -> argparse.ArgumentParser:
                      help="single-language report; both are embedded by default")
     run.add_argument("--limit", type=int, default=None,
                      help="only the first N questions — a cheap dry run")
+    run.add_argument("--no-warmup", dest="warmup", action="store_false",
+                     help="skip the discarded first call that absorbs model load")
     check = subcommands.add_parser(
         "smoke", help="verify the install on three built-in questions, no model needed"
     )
@@ -285,7 +305,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "smoke":
             return smoke(args.out, args.lang)
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-        return run_config(config, args.out, args.lang, args.limit)
+        return run_config(config, args.out, args.lang, args.limit, args.warmup)
     except ConfigError as error:
         print(f"configuration: {error}", file=sys.stderr)
         return 3

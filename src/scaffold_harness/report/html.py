@@ -60,7 +60,8 @@ summary { cursor: pointer; font-weight: 600; }
 details p { margin: .5rem 0 .2rem; opacity: .85; }
 .cases td { vertical-align: top; font-size: .88rem; }
 .cases td.q { text-align: left; max-width: 26rem; }
-.cases .ans { font-family: ui-monospace, Consolas, monospace; }
+.cases .ans { font-family: ui-monospace, Consolas, monospace; text-align: left;
+              max-width: 15rem; }
 .pill { font-size: .7rem; font-weight: 700; padding: .12rem .42rem;
         border-radius: 3px; color: #fff; white-space: nowrap; }
 .pill.destroyed { background: #c0392b; } .pill.improved { background: #1e8449; }
@@ -239,6 +240,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
             f"<td>×{row['token_ratio_vs_baseline']:.2f}</td>"
             f"<td>×{row['latency_ratio_vs_baseline']:.2f}</td>"
             f"<td>{row['p95_latency_ms']:.0f} ms</td>"
+            f"<td>{row.get('median_latency_ms', 0):.0f} ms</td>"
             f"<td class='muted'>p={row['mcnemar_p']:.3f}</td></tr>"
         )
 
@@ -287,6 +289,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
 <table><thead><tr>
 <th>{escape(t(lang, "col.variant"))}</th><th>{escape(t(lang, "col.tokens"))}</th>
 <th>{escape(t(lang, "col.latency"))}</th><th>{escape(t(lang, "col.latency_abs"))}</th>
+<th>{escape(t(lang, "col.median"))}</th>
 <th>{escape(t(lang, "col.mcnemar"))}</th>
 </tr></thead><tbody>{"".join(cost_row(row) for row in variants)}</tbody></table>
 
