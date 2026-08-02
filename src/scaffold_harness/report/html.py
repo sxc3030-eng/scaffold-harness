@@ -180,7 +180,25 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
     reference = report.get("reference_for_deviation", "baseline")
     question_set = report.get("question_set", {})
 
-    verdicts = "".join(
+    warnings = ""
+    failures = int(report.get("provider_failures", 0) or 0)
+    total_calls = report["case_count"] * (1 + len(variants))
+    if failures:
+        warnings += (
+            f'<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
+            + escape(t(lang, "warn.failures", count=failures, total=total_calls,
+                       limit=f"{report.get('max_failure_rate', 0.05):.0%}"))
+            + "</div>"
+        )
+    disagreements = report.get("scorer_disagreements") or []
+    if disagreements:
+        warnings += (
+            f'<div class="verdict inconclusive"><span class="tag inconclusive">!</span>'
+            + escape(t(lang, "warn.scorer", count=len(disagreements)))
+            + "</div>"
+        )
+
+    verdicts = warnings + "".join(
         f'<div class="verdict {escape(str(row.get("outcome", "inconclusive")))}">'
         f'<span class="tag {escape(str(row.get("outcome", "inconclusive")))}">'
         f'{escape(t(lang, "outcome." + str(row.get("outcome", "inconclusive"))))}</span>'
@@ -195,7 +213,8 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
             f"<tr><td>{escape(label)}</td><td>{row['correct']}/{row['cases']}</td>"
             f"<td>{_pct(row['accuracy'])}</td>"
             f"<td class='muted'>[{_pct(low)} – {_pct(high)}]</td>"
-            f"<td>{_pct(row['coverage'])}</td><td>{row['refused']}</td></tr>"
+            f"<td>{_pct(row['coverage'])}</td><td>{row['refused']}</td>"
+            f"<td>{row.get('failed', 0)}</td></tr>"
         )
 
     def change_row(row: Mapping[str, Any]) -> str:
@@ -255,6 +274,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
 <th>{escape(t(lang, "col.path"))}</th><th>{escape(t(lang, "col.correct"))}</th>
 <th>{escape(t(lang, "col.accuracy"))}</th><th>{escape(t(lang, "col.ci"))}</th>
 <th>{escape(t(lang, "col.coverage"))}</th><th>{escape(t(lang, "col.refused"))}</th>
+<th>{escape(t(lang, "col.failed"))}</th>
 </tr></thead><tbody>{score_row(baseline, t(lang, "row.baseline"))
     + "".join(score_row(row, str(row["name"])) for row in variants)}</tbody></table>
 

@@ -17,7 +17,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from ..core import ComparisonReport
+from ..core import MAX_FAILURE_RATE, ComparisonReport
 from ..i18n import DEFAULT_LANG, t
 from ..provenance import sign
 
@@ -55,6 +55,13 @@ def build(
         ],
         "reference_for_deviation": comparison.reference_name,
         "case_count": comparison.case_count,
+        # Deux avertissements qui priment sur le verdict: une panne massive et
+        # un noteur incertain rendent tous les autres chiffres indéfendables.
+        "provider_failures": sum(
+            row.failed for row in (comparison.baseline, *comparison.variants)
+        ),
+        "max_failure_rate": MAX_FAILURE_RATE,
+        "scorer_disagreements": list(comparison.scorer_disagreements),
         # Le détail par cas, trié pour que les destructions arrivent en tête:
         # c'est ce qu'un lecteur doit voir en premier, pas les cas inchangés.
         "cases": _ordered_cases(comparison, max_cases) if include_cases else [],

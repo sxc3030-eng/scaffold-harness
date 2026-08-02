@@ -52,6 +52,17 @@ STRINGS: dict[str, dict[str, str]] = {
         "section.faq": "Questions",
         "section.repro": "Reproduce this",
         "section.cases": "Question by question",
+        "warn.failures": (
+            "{count} of {total} calls failed at the provider. Above {limit}, a "
+            "result can no longer be attributed to the layer rather than to the "
+            "outage, and the verdict abstains."
+        ),
+        "warn.scorer": (
+            "{count} cases where two graders disagree. The score there depends "
+            "on how answers are compared, not on the answers themselves — read "
+            "them before trusting any number in this report."
+        ),
+        "col.failed": "failed",
         "section.cases.note": (
             "Destroyed answers first. This is where a number becomes a "
             "decision: read three of them and you will know whether the layer "
@@ -125,6 +136,17 @@ STRINGS: dict[str, dict[str, str]] = {
         "section.faq": "Questions",
         "section.repro": "Reproduire",
         "section.cases": "Question par question",
+        "warn.failures": (
+            "{count} appels sur {total} ont échoué chez le fournisseur. Au-delà "
+            "de {limit}, un résultat n'est plus attribuable à la couche plutôt "
+            "qu'à la panne, et le verdict s'abstient."
+        ),
+        "warn.scorer": (
+            "{count} cas où deux correcteurs sont en désaccord. Le score y "
+            "dépend de la façon de comparer, pas des réponses — à lire avant de "
+            "faire confiance à un chiffre de ce rapport."
+        ),
+        "col.failed": "pannes",
         "section.cases.note": (
             "Les réponses détruites d'abord. C'est ici qu'un chiffre devient "
             "une décision : lisez-en trois et vous saurez si la couche mérite "

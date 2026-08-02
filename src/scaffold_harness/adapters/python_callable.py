@@ -67,6 +67,7 @@ class PythonPath:
                 answer=None,
                 contract_valid=False,
                 refused=False,
+                failed=True,
                 input_tokens=estimate_tokens(case.question),
                 raw=f"{type(error).__name__}: {error}",
             )

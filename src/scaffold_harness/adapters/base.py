@@ -141,6 +141,7 @@ class ChatAdapter:
                 answer=None,
                 contract_valid=False,
                 refused=False,
+                failed=True,
                 raw=f"AdapterError: {error}",
             )
         text, input_tokens, output_tokens = result.value

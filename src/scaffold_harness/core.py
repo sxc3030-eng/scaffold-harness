@@ -46,6 +46,10 @@ class Response:
     answer: str | None
     contract_valid: bool = True
     refused: bool = False
+    # Panne du fournisseur: ni une mauvaise réponse, ni un refus. Sans ce
+    # troisième état, un run où l'API est tombée affiche une exactitude basse
+    # sans jamais dire pourquoi — un mensonge par omission.
+    failed: bool = False
     latency_ms: float = 0.0
     input_tokens: int = 0
     output_tokens: int = 0
@@ -54,6 +58,10 @@ class Response:
 
 Scorer = Callable[[Response, Case], bool]
 Path = Callable[[Case], Response]
+
+# Au-delà de ce taux de pannes, un résultat n'est plus attribuable à la couche
+# mesurée. Cinq pour cent est déjà beaucoup pour un run qu'on veut publier.
+MAX_FAILURE_RATE = 0.05
 
 
 @dataclass(frozen=True)
@@ -88,6 +96,7 @@ class VariantResult:
     correct: int
     contract_valid: int
     refused: int
+    failed: int
     accuracy: float
     accuracy_ci95: tuple[float, float]
     deviation_vs_reference: Deviation
@@ -110,6 +119,8 @@ class VariantResult:
             "accuracy_ci95": list(self.accuracy_ci95),
             "contract_valid": self.contract_valid,
             "refused": self.refused,
+            "failed": self.failed,
+            "failure_rate": self.failed / self.cases if self.cases else 0.0,
             "coverage": (self.cases - self.refused) / self.cases if self.cases else 0.0,
             "deviation_vs_reference": self.deviation_vs_reference.as_dict(),
             "paired_wins_vs_baseline": self.paired_wins,
@@ -169,6 +180,7 @@ class ComparisonReport:
     case_count: int
     reference_name: str
     cases: tuple[CaseOutcome, ...] = ()
+    scorer_disagreements: tuple[str, ...] = ()
 
     def _find(self, variant: str) -> VariantResult:
         found = next((row for row in self.variants if row.name == variant), None)
@@ -189,6 +201,11 @@ class ComparisonReport:
         changement de mise en forme.
         """
         found = self._find(variant)
+        # Au-delà du seuil, on ne peut plus distinguer «la couche est mauvaise»
+        # de «le fournisseur était en panne». Le verdict doit s'abstenir plutôt
+        # que d'attribuer à l'échafaudage ce qui revient au réseau.
+        if found.cases and found.failed / found.cases > MAX_FAILURE_RATE:
+            return "inconclusive"
         if not found.significant_at_05:
             return "inconclusive"
         return "gain" if self.delta(variant) > 0 else "loss"
@@ -256,8 +273,16 @@ def compare(
     scorer: Scorer,
     reference: Path | None = None,
     reference_name: str = "baseline",
+    audit_scorer: Scorer | None = None,
 ) -> ComparisonReport:
     """Compare des variantes au modèle nu, sur les mêmes cas, appariées.
+
+    `audit_scorer` est un second noteur, facultatif, qui ne sert qu'à se
+    contredire. Chaque désaccord est un cas où la note dépend de la manière de
+    comparer et non de la réponse. Sur un système réel, un correcteur qui
+    comparait des chaînes canoniques a compté faux **43 réponses justes** — un
+    harnais dont le noteur ment produit des chiffres faux avec une confiance
+    parfaite, et aucun autre test ne l'attrape.
 
     `reference` est le chemin par rapport auquel on compte les modifications.
     Par défaut c'est le modèle nu — tout le monde en a un. Si un chemin
@@ -320,6 +345,7 @@ def compare(
             correct=hits,
             contract_valid=sum(row.contract_valid for row in responses.values()),
             refused=sum(row.refused for row in responses.values()),
+            failed=sum(row.failed for row in responses.values()),
             accuracy=hits / total,
             accuracy_ci95=wilson_interval(hits, total),
             deviation_vs_reference=_deviation(
@@ -342,6 +368,16 @@ def compare(
     # ce qui permet la vue « quelles réponses ma couche a-t-elle cassées ».
     variant_responses = {name: _collect(path, ordered) for name, path in variants.items()}
     variant_correct = {name: score_all(rows) for name, rows in variant_responses.items()}
+
+    disagreements: list[str] = []
+    if audit_scorer is not None:
+        for name, responses in {"baseline": baseline_responses, **variant_responses}.items():
+            for case in ordered:
+                response = responses[case.case_id]
+                first = bool(scorer(response, case))
+                second = bool(audit_scorer(response, case))
+                if first != second:
+                    disagreements.append(f"{name}:{case.case_id}")
 
     outcomes: list[CaseOutcome] = []
     for case in ordered:
@@ -379,4 +415,5 @@ def compare(
         case_count=len(ordered),
         reference_name=reference_name,
         cases=tuple(outcomes),
+        scorer_disagreements=tuple(sorted(set(disagreements))),
     )

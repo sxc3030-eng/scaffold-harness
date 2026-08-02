@@ -271,3 +271,85 @@ class LargeSampleStatisticsTests(unittest.TestCase):
         for total in (1, 10, 800, 10_000):
             self.assertEqual(wilson_interval(total, total)[1], 1.0)
             self.assertEqual(wilson_interval(0, total)[0], 0.0)
+
+
+class ProviderFailureTests(unittest.TestCase):
+    """Une panne massive ne doit pas être imputée à la couche mesurée."""
+
+    def test_failures_are_counted_apart_from_wrong_and_refused(self) -> None:
+        cases, good, _ = build_set(20)
+        broken = lambda case: Response(  # noqa: E731
+            case.case_id, None, contract_valid=False, failed=True
+        )
+        report = compare(cases, path_from(good), {"down": broken}, scorer)
+        row = report.variants[0].as_dict()
+        self.assertEqual(row["failed"], 20)
+        self.assertEqual(row["failure_rate"], 1.0)
+        self.assertEqual(row["refused"], 0)
+
+    def test_a_massive_outage_forces_the_verdict_to_abstain(self) -> None:
+        # Sans ce garde-fou, une API tombée produirait un «LOSS» retentissant
+        # qui n'apprend rien sur l'échafaudage.
+        cases, good, _ = build_set(100)
+        half = lambda case: Response(  # noqa: E731
+            case.case_id,
+            None if int(case.case_id[1:]) < 40 else good[case.case_id],
+            failed=int(case.case_id[1:]) < 40,
+        )
+        report = compare(cases, path_from(good), {"flaky": half}, scorer)
+        self.assertGreater(report.variants[0].failed, 5)
+        self.assertEqual(report.outcome("flaky"), "inconclusive")
+
+    def test_a_few_failures_do_not_silence_a_real_verdict(self) -> None:
+        cases, good, bad = build_set(200, 60)
+        one_bad = lambda case: Response(  # noqa: E731
+            case.case_id,
+            None if case.case_id == "c0" else bad[case.case_id],
+            failed=case.case_id == "c0",
+        )
+        report = compare(cases, path_from(good), {"v": one_bad}, scorer)
+        self.assertEqual(report.variants[0].failed, 1)
+        self.assertEqual(report.outcome("v"), "loss")
+
+
+class ScorerAuditTests(unittest.TestCase):
+    """Un harnais dont le noteur ment produit des chiffres faux avec aplomb."""
+
+    def test_two_agreeing_scorers_report_no_disagreement(self) -> None:
+        cases, good, bad = build_set(30, 10)
+        report = compare(
+            cases, path_from(good), {"v": path_from(bad)}, scorer, audit_scorer=scorer
+        )
+        self.assertEqual(report.scorer_disagreements, ())
+
+    def test_a_stricter_scorer_exposes_every_case_where_grading_decides(self) -> None:
+        # Reproduction du cas réel: un noteur qui exigeait une enveloppe stricte
+        # rejetait des réponses justes parce que le modèle recopiait les clés de
+        # son outil à côté. 43 réponses, toutes dans les bras qui recevaient une
+        # proposition d'expert.
+        cases = [Case(f"c{i}", f"q{i}", target="7") for i in range(10)]
+        chatty = lambda case: Response(  # noqa: E731
+            case.case_id, "7", raw='{"answer":"7","source":"tool"}'
+        )
+        picky = lambda response, case: response.raw == '{"answer":"7"}'  # noqa: E731
+        report = compare(
+            cases, chatty, {"v": chatty}, scorer, audit_scorer=picky
+        )
+        # Les deux chemins sont audités: 10 cas × 2 = 20 désaccords.
+        self.assertEqual(len(report.scorer_disagreements), 20)
+        self.assertTrue(
+            all(":" in entry for entry in report.scorer_disagreements)
+        )
+
+    def test_the_report_carries_the_warning(self) -> None:
+        cases = [Case("a", "q", target="1")]
+        path = lambda case: Response(case.case_id, "1")  # noqa: E731
+        never = lambda response, case: False  # noqa: E731
+        artefact = build(
+            compare(cases, path, {"v": path}, scorer, audit_scorer=never),
+            {}, {}, {"name": "audit"},
+        )
+        self.assertEqual(len(artefact["scorer_disagreements"]), 2)
+        page = render(artefact)
+        self.assertIn("two graders disagree", page)
+        self.assertIn("deux correcteurs sont en désaccord", page)
