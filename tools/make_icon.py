@@ -31,8 +31,8 @@ def blank(size: int) -> list[list[tuple[int, int, int, int]]]:
 
 def fill(canvas, x0: float, y0: float, x1: float, y1: float, colour) -> None:
     size = len(canvas)
-    left, right = sorted((int(round(x0 * size)), int(round(x1 * size))))
-    top, bottom = sorted((int(round(y0 * size)), int(round(y1 * size))))
+    left, right = sorted((round(x0 * size), round(x1 * size)))
+    top, bottom = sorted((round(y0 * size), round(y1 * size)))
     right = max(right, left + 1)
     bottom = max(bottom, top + 1)
     for y in range(max(0, top), min(size, bottom)):
@@ -113,7 +113,8 @@ def to_ico(images: dict[int, bytes]) -> bytes:
     return struct.pack("<HHH", 0, 1, len(images)) + entries + blobs
 
 
-SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"
+     width="256" height="256">
   <rect width="256" height="256" rx="46" fill="#1b1f24"/>
   <rect x="35.8" y="121" width="184.4" height="14" fill="#8a8f96"/>
   <rect x="51.2" y="48.6" width="41" height="79.4" fill="#1e8449"/>

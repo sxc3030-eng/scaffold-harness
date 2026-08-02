@@ -68,16 +68,16 @@ def bar_chart(
     width = pad_left + plot_width + pad_right
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
         f'width="{width}" height="{height}" role="img" '
-        f'aria-labelledby="t d">',
+        f'aria-labelledby="t d">'),
         f"<title id='t'>{escape(title)}</title>",
         f"<desc id='d'>{escape(subtitle)}</desc>",
         f'<rect width="{width}" height="{height}" fill="{theme.surface}"/>',
-        f'<text x="{pad_left}" y="24" font-family="{FONT}" font-size="15" '
-        f'font-weight="500" fill="{theme.ink}">{escape(title)}</text>',
-        f'<text x="{pad_left}" y="42" font-family="{FONT}" font-size="12" '
-        f'fill="{theme.secondary}">{escape(subtitle)}</text>',
+        (f'<text x="{pad_left}" y="24" font-family="{FONT}" font-size="15" '
+        f'font-weight="500" fill="{theme.ink}">{escape(title)}</text>'),
+        (f'<text x="{pad_left}" y="42" font-family="{FONT}" font-size="12" '
+        f'fill="{theme.secondary}">{escape(subtitle)}</text>'),
     ]
 
     for tick in ticks:
