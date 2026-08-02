@@ -264,3 +264,45 @@ class ResilienceTests(unittest.TestCase):
         self.assertFalse(response.contract_valid)
         self.assertFalse(response.refused)  # échec ≠ refus
         self.assertIn("AdapterError", response.raw)
+
+
+class OllamaProvenanceTests(unittest.TestCase):
+    def test_the_report_pins_the_digest_not_the_mutable_tag(self) -> None:
+        import io
+        import json as _json
+
+        catalogue = {"models": [{"name": "gemma3:12b", "digest": "d" * 64}]}
+
+        class Stream(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_a):
+                return False
+
+        adapter = OllamaChat(model="gemma3:12b")
+        with mock.patch(
+            "scaffold_harness.adapters.ollama.urllib.request.urlopen",
+            return_value=Stream(_json.dumps(catalogue).encode()),
+        ):
+            descriptor = adapter.descriptor()
+        self.assertEqual(descriptor["model_digest"], "d" * 64)
+
+    def test_an_unreachable_catalogue_does_not_break_the_report(self) -> None:
+        import urllib.error
+
+        adapter = OllamaChat(model="absent")
+        with mock.patch(
+            "scaffold_harness.adapters.ollama.urllib.request.urlopen",
+            side_effect=urllib.error.URLError("down"),
+        ):
+            self.assertIsNone(adapter.descriptor()["model_digest"])
+
+    def test_keep_alive_is_sent_so_the_model_stays_loaded(self) -> None:
+        adapter = OllamaChat(model="m", keep_alive="30m")
+        with mock.patch(
+            "scaffold_harness.adapters.ollama.post_json",
+            return_value={"message": {"content": "4"}},
+        ) as call:
+            adapter(CASE)
+        self.assertEqual(call.call_args[0][1]["keep_alive"], "30m")
