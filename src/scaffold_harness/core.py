@@ -125,11 +125,50 @@ class VariantResult:
 
 
 @dataclass(frozen=True)
+class CaseOutcome:
+    """Le détail d'une question, pour l'écran qui compte le plus.
+
+    Un tableau agrégé dit « votre couche a détruit 12 réponses ». Celui-ci dit
+    *lesquelles*, avec ce que la référence répondait et ce que la couche a mis à
+    la place. C'est le moment où un utilisateur comprend ce qui se passe chez
+    lui — aucun chiffre ne remplace la lecture de trois cas détruits.
+    """
+
+    case_id: str
+    question: str
+    target: str | None
+    reference_answer: str | None
+    reference_correct: bool
+    variants: Mapping[str, Mapping[str, Any]]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "case_id": self.case_id,
+            "question": self.question,
+            "target": self.target,
+            "reference_answer": self.reference_answer,
+            "reference_correct": self.reference_correct,
+            "variants": {name: dict(row) for name, row in self.variants.items()},
+        }
+
+
+def _label(changed: bool, was: bool, now: bool) -> str:
+    if not changed:
+        return "unchanged"
+    if now and not was:
+        return "improved"
+    if was and not now:
+        return "destroyed"
+    return "neutral_change"
+
+
+@dataclass(frozen=True)
 class ComparisonReport:
     baseline: VariantResult
     variants: tuple[VariantResult, ...]
     case_count: int
     reference_name: str
+    cases: tuple[CaseOutcome, ...] = ()
 
     def _find(self, variant: str) -> VariantResult:
         found = next((row for row in self.variants if row.name == variant), None)
@@ -299,14 +338,45 @@ def compare(
             latency_ratio_vs_baseline=p95 / base_p95 if base_p95 else 1.0,
         )
 
+    # Les réponses sont collectées avant d'être résumées: le détail par cas est
+    # ce qui permet la vue « quelles réponses ma couche a-t-elle cassées ».
+    variant_responses = {name: _collect(path, ordered) for name, path in variants.items()}
+    variant_correct = {name: score_all(rows) for name, rows in variant_responses.items()}
+
+    outcomes: list[CaseOutcome] = []
+    for case in ordered:
+        reference_response = reference_responses[case.case_id]
+        rows: dict[str, dict[str, Any]] = {}
+        for name, responses in variant_responses.items():
+            response = responses[case.case_id]
+            changed = not _same_answer(response, reference_response)
+            was = correct_reference[case.case_id]
+            now = variant_correct[name][case.case_id]
+            rows[name] = {
+                "answer": response.answer,
+                "correct": now,
+                "refused": response.refused,
+                "changed": changed,
+                "label": _label(changed, was, now),
+            }
+        outcomes.append(
+            CaseOutcome(
+                case_id=case.case_id,
+                question=case.question,
+                target=None if case.target is None else str(case.target),
+                reference_answer=reference_response.answer,
+                reference_correct=correct_reference[case.case_id],
+                variants=rows,
+            )
+        )
+
     return ComparisonReport(
         baseline=summarise("baseline", baseline_responses, correct_baseline),
         variants=tuple(
-            summarise(name, responses, score_all(responses))
-            for name, responses in (
-                (name, _collect(path, ordered)) for name, path in variants.items()
-            )
+            summarise(name, variant_responses[name], variant_correct[name])
+            for name in variants
         ),
         case_count=len(ordered),
         reference_name=reference_name,
+        cases=tuple(outcomes),
     )

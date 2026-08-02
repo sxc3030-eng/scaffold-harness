@@ -31,6 +31,8 @@ def build(
     question_set: Mapping[str, Any],
     reproduction: str | None = None,
     notes: Mapping[str, Any] | None = None,
+    include_cases: bool = True,
+    max_cases: int = 400,
 ) -> dict[str, Any]:
     # Le rapport stocke un code et des nombres, jamais une phrase: il doit
     # pouvoir être rendu dans une autre langue sans être recalculé.
@@ -53,6 +55,12 @@ def build(
         ],
         "reference_for_deviation": comparison.reference_name,
         "case_count": comparison.case_count,
+        # Le détail par cas, trié pour que les destructions arrivent en tête:
+        # c'est ce qu'un lecteur doit voir en premier, pas les cas inchangés.
+        "cases": _ordered_cases(comparison, max_cases) if include_cases else [],
+        "cases_truncated": bool(
+            include_cases and comparison.case_count > max_cases
+        ),
         "reproduction": reproduction,
         "notes": dict(notes or {}),
         # Déclarations explicites: un rapport muet sur ces points n'est pas
@@ -64,6 +72,24 @@ def build(
         },
     }
     return sign(body)
+
+
+_PRIORITY = {"destroyed": 0, "improved": 1, "neutral_change": 2, "unchanged": 3}
+
+
+def _ordered_cases(comparison: ComparisonReport, limit: int) -> list[dict[str, Any]]:
+    """Trie les cas: destructions d'abord, cas inchangés en dernier.
+
+    Si le rapport doit être tronqué, ce qui se perd est ce que personne ne
+    regarde. L'inverse — tronquer par ordre d'identifiant — ferait disparaître
+    exactement les cas qui justifient le rapport.
+    """
+
+    def rank(case: Any) -> tuple[int, str]:
+        labels = [row["label"] for row in case.variants.values()] or ["unchanged"]
+        return (min(_PRIORITY.get(label, 3) for label in labels), case.case_id)
+
+    return [case.as_dict() for case in sorted(comparison.cases, key=rank)[:limit]]
 
 
 def verdict_sentence(report: Mapping[str, Any], variant: Mapping[str, Any],

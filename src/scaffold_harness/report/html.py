@@ -58,6 +58,22 @@ pre { background: rgba(128,128,128,.10); padding: .8rem; border-radius: 4px;
 details { border-bottom: 1px solid rgba(128,128,128,.24); padding: .55rem 0; }
 summary { cursor: pointer; font-weight: 600; }
 details p { margin: .5rem 0 .2rem; opacity: .85; }
+.cases td { vertical-align: top; font-size: .88rem; }
+.cases td.q { text-align: left; max-width: 26rem; }
+.cases .ans { font-family: ui-monospace, Consolas, monospace; }
+.pill { font-size: .7rem; font-weight: 700; padding: .12rem .42rem;
+        border-radius: 3px; color: #fff; white-space: nowrap; }
+.pill.destroyed { background: #c0392b; } .pill.improved { background: #1e8449; }
+.pill.neutral_change { background: #b7950b; }
+.pill.unchanged { background: rgba(128,128,128,.55); }
+.filters { display: flex; gap: .4rem; margin: .3rem 0 .8rem; flex-wrap: wrap; }
+.filters button { font: inherit; font-size: .82rem; padding: .25rem .7rem;
+                  border: 1px solid rgba(128,128,128,.45); background: none;
+                  color: inherit; border-radius: 999px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: rgba(128,128,128,.22);
+                                       font-weight: 600; }
+tbody.filtered tr { display: none; }
+tbody.filtered tr.match { display: table-row; }
 footer { margin-top: 2.5rem; font-size: .78rem; opacity: .6; word-break: break-all; }
 .switch { float: right; font-size: .82rem; }
 .switch a { text-decoration: none; opacity: .7; }
@@ -77,12 +93,85 @@ SCRIPT = """
     event.preventDefault();
     root.setAttribute('lang', root.getAttribute('lang') === 'fr' ? 'en' : 'fr');
   });
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-filter]');
+    if (!button) { return; }
+    var wanted = button.getAttribute('data-filter');
+    var body = button.closest('section').querySelector('tbody');
+    button.parentNode.querySelectorAll('button').forEach(function (other) {
+      other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
+    });
+    if (wanted === 'all') { body.classList.remove('filtered'); return; }
+    body.classList.add('filtered');
+    body.querySelectorAll('tr').forEach(function (line) {
+      var label = line.getAttribute('data-label') || '';
+      var hit = wanted === 'changed' ? label !== 'unchanged' : label === wanted;
+      line.classList.toggle('match', hit);
+    });
+  });
 })();
 """
 
 
 def _pct(value: float) -> str:
     return f"{value:.1%}"
+
+
+def _cases_section(lang: str, report: Mapping[str, Any]) -> str:
+    """Le détail par question, destructions en tête.
+
+    Sans JavaScript, toutes les lignes restent visibles: les filtres sont un
+    confort, pas une condition de lecture.
+    """
+    rows = report.get("cases") or []
+    if not rows:
+        return ""
+    names = list((rows[0].get("variants") or {}).keys())
+    if not names:
+        return ""
+    primary = names[0]
+
+    def clip(value: Any, size: int = 150) -> str:
+        text_value = "—" if value in (None, "") else str(value)
+        text_value = " ".join(text_value.split())
+        return escape(text_value[:size] + ("…" if len(text_value) > size else ""))
+
+    lines = []
+    for case in rows:
+        row = (case.get("variants") or {}).get(primary) or {}
+        label = str(row.get("label", "unchanged"))
+        lines.append(
+            f'<tr data-label="{escape(label)}">'
+            f'<td class="q">{clip(case.get("question"))}</td>'
+            f'<td class="ans">{clip(case.get("reference_answer"), 40)}</td>'
+            f'<td class="ans">{clip(row.get("answer"), 40)}</td>'
+            f'<td class="ans muted">{clip(case.get("target"), 40)}</td>'
+            f'<td><span class="pill {escape(label)}">'
+            f'{escape(t(lang, "label." + label))}</span></td></tr>'
+        )
+
+    truncated = (
+        f'<div class="note">{escape(t(lang, "cases.truncated", shown=len(rows), total=report["case_count"]))}</div>'
+        if report.get("cases_truncated")
+        else ""
+    )
+    buttons = "".join(
+        f'<button type="button" data-filter="{key}" '
+        f'aria-pressed="{"true" if key == "all" else "false"}">'
+        f'{escape(t(lang, "filter." + key))}</button>'
+        for key in ("all", "destroyed", "improved", "changed")
+    )
+    return f"""
+<section>
+<h2>{escape(t(lang, "section.cases"))}</h2>
+<div class="note">{escape(t(lang, "section.cases.note"))}</div>
+{truncated}
+<div class="filters">{buttons}</div>
+<table class="cases"><thead><tr>
+<th>{escape(t(lang, "col.question"))}</th><th>{escape(t(lang, "col.reference"))}</th>
+<th>{escape(t(lang, "col.answer"))}</th><th>{escape(t(lang, "col.expected"))}</th>
+<th></th></tr></thead><tbody>{"".join(lines)}</tbody></table>
+</section>"""
 
 
 def _section(lang: str, report: Mapping[str, Any]) -> str:
@@ -176,6 +265,7 @@ def _section(lang: str, report: Mapping[str, Any]) -> str:
 <th>{escape(t(lang, "col.mcnemar"))}</th>
 </tr></thead><tbody>{"".join(cost_row(row) for row in variants)}</tbody></table>
 
+{_cases_section(lang, report)}
 <h2>{escape(t(lang, "section.what"))}</h2>{what}
 <h2>{escape(t(lang, "section.faq"))}</h2>{faq}
 {repro}

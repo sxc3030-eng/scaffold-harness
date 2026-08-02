@@ -51,6 +51,26 @@ STRINGS: dict[str, dict[str, str]] = {
         "section.what": "What this report measures",
         "section.faq": "Questions",
         "section.repro": "Reproduce this",
+        "section.cases": "Question by question",
+        "section.cases.note": (
+            "Destroyed answers first. This is where a number becomes a "
+            "decision: read three of them and you will know whether the layer "
+            "is worth keeping."
+        ),
+        "filter.all": "all",
+        "filter.destroyed": "destroyed",
+        "filter.improved": "improved",
+        "filter.changed": "changed",
+        "col.question": "question",
+        "col.reference": "reference",
+        "col.answer": "your layer",
+        "col.expected": "expected",
+        "label.destroyed": "destroyed",
+        "label.improved": "improved",
+        "label.neutral_change": "changed, still wrong",
+        "label.unchanged": "unchanged",
+        "cases.truncated": "Showing the {shown} most relevant of {total} cases.",
+        "cases.empty": "No case detail was recorded for this run.",
         "col.variant": "variant",
         "col.changed": "changed",
         "col.improved": "improved",
@@ -104,6 +124,26 @@ STRINGS: dict[str, dict[str, str]] = {
         "section.what": "Ce que ce rapport mesure",
         "section.faq": "Questions",
         "section.repro": "Reproduire",
+        "section.cases": "Question par question",
+        "section.cases.note": (
+            "Les réponses détruites d'abord. C'est ici qu'un chiffre devient "
+            "une décision : lisez-en trois et vous saurez si la couche mérite "
+            "d'être gardée."
+        ),
+        "filter.all": "tout",
+        "filter.destroyed": "détruites",
+        "filter.improved": "améliorées",
+        "filter.changed": "modifiées",
+        "col.question": "question",
+        "col.reference": "référence",
+        "col.answer": "votre couche",
+        "col.expected": "attendu",
+        "label.destroyed": "détruite",
+        "label.improved": "améliorée",
+        "label.neutral_change": "modifiée, toujours fausse",
+        "label.unchanged": "inchangée",
+        "cases.truncated": "Affichage des {shown} cas les plus pertinents sur {total}.",
+        "cases.empty": "Aucun détail par cas n'a été enregistré pour ce run.",
         "col.variant": "variante",
         "col.changed": "modifiées",
         "col.improved": "améliorées",
