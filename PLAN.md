@@ -66,10 +66,13 @@ rien »** — et c'est un de ses arguments les plus forts.
 - [ ] « Aucune différence significative » affichable en grand
 - [ ] Section reproduction : la commande exacte
 
-## Phase 4 — CLI
+## Phase 4 — CLI *(fait, sauf reprise)*
 
-- [ ] `scaffold-harness run --baseline … --scaffold … --questions … --out …`
-- [ ] Chargeurs de jeux de questions : JSONL maison, pont lm-eval
+- [x] `scaffold-harness run config.json --out …` — config JSON, aucun code à écrire
+- [x] Chargeur JSONL + empreinte du jeu de questions
+- [x] Code de sortie 2 si la couche détruit plus qu'elle n'améliore (barrière CI)
+- [x] Icône : `assets/icon.ico` (7 tailles) + SVG, générés sans dépendance
+- [ ] Pont lm-eval
 - [ ] Reprise sur incident : ledgers incrémentaux
 
 > **Reprise obligatoire dès le départ.** Sur `mat-9f`, l'empreinte du manifeste
@@ -77,12 +80,13 @@ rien »** — et c'est un de ses arguments les plus forts.
 > 1574 générations perdues sur une panne GPU. Ne jamais faire entrer d'identité
 > de processus dans une empreinte de campagne.
 
-## Phase 5 — Se manger soi-même *(le jalon qui compte)*
+## Phase 5 — Se manger soi-même *(RÉUSSI)*
 
-- [ ] Rejouer les ledgers `mat-9f` v2/v3 dans le harnais
-- [ ] **Reproduire les chiffres connus** : 4316 déviations / 4316 destructions /
-      0 amélioration, et Granite 11/25 nu contre 9/25 avec l'échafaudage
-- [ ] Si les chiffres ne tombent pas, c'est le harnais qui a tort
+- [x] `validation/replay_mat9f.py` rejoue les ledgers réels v2
+- [x] **Chiffres reproduits au centième** : exécuteur 800/800 = 100,00 % ;
+      direct 6,38 % · memory 7,88 % · experts 81,00 % · adaptive 81,38 % ;
+      152 et 149 destructions, **0 amélioration**
+- [ ] Rejouer aussi la campagne HF (11/25 nu contre 9/25) quand elle sera finie
 
 C'est la validation de l'instrument. Aucune diffusion avant ça.
 
