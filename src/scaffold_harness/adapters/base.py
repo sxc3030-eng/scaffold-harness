@@ -58,20 +58,38 @@ def post_json(
     payload: Mapping[str, Any],
     headers: Mapping[str, str] | None = None,
     timeout: float = 120.0,
+    attempts: int = 3,
+    backoff: float = 0.5,
 ) -> dict[str, Any]:
+    """POST JSON, avec réessai sur les défaillances passagères.
+
+    Un serveur local qui décharge un modèle, une API qui renvoie 503, une
+    coupure d'une seconde: ces incidents sont normaux sur un run long et ne
+    doivent pas coûter les centaines d'appels déjà payés. On réessaie sur 5xx,
+    429 et erreurs réseau; jamais sur une 4xx, qui ne changera pas d'avis.
+    """
     body = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=body, method="POST")
-    request.add_header("Content-Type", "application/json")
-    for key, value in (headers or {}).items():
-        request.add_header(key, value)
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as stream:
-            return json.loads(stream.read().decode("utf-8"))
-    except urllib.error.HTTPError as error:  # pragma: no cover - dépend du réseau
-        detail = error.read().decode("utf-8", "replace")[:400]
-        raise AdapterError(f"{url} a répondu {error.code}: {detail}") from error
-    except urllib.error.URLError as error:  # pragma: no cover - dépend du réseau
-        raise AdapterError(f"{url} injoignable: {error.reason}") from error
+    last = ""
+    for attempt in range(1, max(1, attempts) + 1):
+        request = urllib.request.Request(url, data=body, method="POST")
+        request.add_header("Content-Type", "application/json")
+        for key, value in (headers or {}).items():
+            request.add_header(key, value)
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as stream:
+                return json.loads(stream.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")[:300]
+            last = f"{url} a répondu {error.code}: {detail}"
+            if error.code < 500 and error.code != 429:
+                raise AdapterError(last) from error
+        except urllib.error.URLError as error:
+            last = f"{url} injoignable: {error.reason}"
+        except json.JSONDecodeError as error:
+            last = f"{url} a renvoyé une réponse illisible: {error}"
+        if attempt < attempts:
+            time.sleep(backoff * (2 ** (attempt - 1)))
+    raise AdapterError(f"{last} (après {attempts} tentatives)")
 
 
 @dataclass
@@ -111,7 +129,20 @@ class ChatAdapter:
         raise NotImplementedError
 
     def __call__(self, case: Case) -> Response:
-        result = timed(self.generate, case)
+        try:
+            result = timed(self.generate, case)
+        except AdapterError as error:
+            # Une défaillance du fournisseur est un échec DE CE CAS, pas du run.
+            # Faire tomber la comparaison entière ferait perdre tous les appels
+            # déjà payés — et ce serait l'incident le plus coûteux possible sur
+            # un jeu de plusieurs centaines de questions.
+            return Response(
+                case_id=case.case_id,
+                answer=None,
+                contract_valid=False,
+                refused=False,
+                raw=f"AdapterError: {error}",
+            )
         text, input_tokens, output_tokens = result.value
         answer = text.strip()
         return Response(

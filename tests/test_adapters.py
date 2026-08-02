@@ -163,3 +163,104 @@ class IntegrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnthropicTests(unittest.TestCase):
+    def test_system_is_a_top_level_field_not_a_message(self) -> None:
+        from scaffold_harness.adapters import AnthropicChat
+
+        payload = {
+            "content": [{"type": "text", "text": "4"}],
+            "usage": {"input_tokens": 21, "output_tokens": 2},
+        }
+        adapter = AnthropicChat(model="claude-x", api_key="k", system="Be exact.")
+        with mock.patch(
+            "scaffold_harness.adapters.anthropic.post_json", return_value=payload
+        ) as call:
+            response = adapter(CASE)
+        sent = call.call_args[0][1]
+        self.assertEqual(sent["system"], "Be exact.")
+        self.assertEqual([row["role"] for row in sent["messages"]], ["user"])
+        self.assertEqual(response.input_tokens, 21)
+        self.assertEqual(call.call_args[1]["headers"]["x-api-key"], "k")
+        self.assertIn("anthropic-version", call.call_args[1]["headers"])
+
+    def test_text_blocks_are_joined_and_key_stays_private(self) -> None:
+        from scaffold_harness.adapters import AnthropicChat
+
+        payload = {"content": [{"type": "text", "text": "3/"}, {"type": "text", "text": "4"}]}
+        adapter = AnthropicChat(model="m", api_key="tres-secret")
+        with mock.patch(
+            "scaffold_harness.adapters.anthropic.post_json", return_value=payload
+        ):
+            self.assertEqual(adapter(CASE).answer, "3/4")
+        self.assertNotIn("tres-secret", str(adapter.descriptor()))
+
+
+class ResilienceTests(unittest.TestCase):
+    def test_a_transient_failure_is_retried_then_succeeds(self) -> None:
+        # Une coupure d'une seconde ne doit pas coûter les appels déjà payés.
+        import json as _json
+        import urllib.error
+
+        from scaffold_harness.adapters.base import post_json
+
+        class FakeStream:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def read(self):
+                return _json.dumps(self.payload).encode("utf-8")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+        calls = []
+
+        def opener(*_args, **_kwargs):
+            calls.append(1)
+            if len(calls) == 1:
+                raise urllib.error.URLError("connexion coupée")
+            return FakeStream({"message": {"content": "4"}})
+
+        with mock.patch("scaffold_harness.adapters.base.urllib.request.urlopen",
+                        side_effect=opener):
+            data = post_json("http://x/y", {}, attempts=3, backoff=0)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(data["message"]["content"], "4")
+
+    def test_a_client_error_is_not_retried(self) -> None:
+        import urllib.error
+
+        from scaffold_harness.adapters.base import AdapterError, post_json
+
+        calls = []
+
+        def opener(*_args, **_kwargs):
+            calls.append(1)
+            raise urllib.error.HTTPError("u", 400, "Bad", {}, None)
+
+        with mock.patch("scaffold_harness.adapters.base.urllib.request.urlopen",
+                        side_effect=opener):
+            with self.assertRaises(AdapterError):
+                post_json("http://x/y", {}, attempts=3, backoff=0)
+        self.assertEqual(len(calls), 1)
+
+    def test_a_provider_failure_costs_one_case_not_the_run(self) -> None:
+        # Le run entier ne doit jamais tomber pour un 500 passager: ce serait
+        # perdre tous les appels déjà payés.
+        from scaffold_harness.adapters.base import AdapterError
+
+        adapter = OllamaChat(model="m")
+        with mock.patch(
+            "scaffold_harness.adapters.ollama.post_json",
+            side_effect=AdapterError("500 transitoire"),
+        ):
+            response = adapter(CASE)
+        self.assertIsNone(response.answer)
+        self.assertFalse(response.contract_valid)
+        self.assertFalse(response.refused)  # échec ≠ refus
+        self.assertIn("AdapterError", response.raw)

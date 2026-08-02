@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from .adapters import OllamaChat, OpenAICompatibleChat, PythonPath
+from .adapters import AnthropicChat, OllamaChat, OpenAICompatibleChat, PythonPath
 from .core import Case, compare
 from .provenance import question_set_digest, write_atomic
 from .report import build, headline, render
@@ -86,6 +86,8 @@ def build_path(spec: Mapping[str, Any]) -> Any:
         return OllamaChat(**options)
     if kind in {"openai", "openai_compatible"}:
         return OpenAICompatibleChat(**options)
+    if kind in {"anthropic", "claude"}:
+        return AnthropicChat(**options)
     if kind == "python":
         target = str(spec.get("import", ""))
         if ":" not in target:

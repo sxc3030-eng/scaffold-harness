@@ -1,0 +1,24 @@
+{
+  "questions": {
+    "path": "questions.jsonl",
+    "name": "exact rational arithmetic — 24 questions"
+  },
+  "scorer": "json_answer",
+  "reference": { "adapter": "python", "import": "paths:executor", "name": "executor" },
+  "reference_name": "deterministic executor",
+  "baseline": {
+    "adapter": "ollama",
+    "model": "llama3.2:latest",
+    "max_tokens": 64,
+    "system": "Compute the exact value. Answer with one JSON object only: {\"answer\":\"p/q\"}. The value must be a single exact reduced fraction. No explanation."
+  },
+  "variants": {
+    "verifier-scaffold": {
+      "adapter": "python",
+      "import": "paths:verify_scaffold",
+      "pass_case": true,
+      "name": "verifier-scaffold"
+    }
+  },
+  "reproduction": "cd examples/real_run && scaffold-harness run config.json --out out/"
+}
