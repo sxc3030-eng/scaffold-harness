@@ -7,7 +7,13 @@ build/
 dist/
 *.egg-info/
 
-# Rapports générés: on versionne le code qui les produit, pas les sorties.
+# Sorties de run: on versionne le code qui les produit, jamais les résultats.
+# Un journal de reprise contient les réponses brutes du modèle — parfois des
+# données du client. Il n'a rien à faire dans un dépôt.
 demo/
 out/
+out*/
+**/journal/
+report.json
+report.html
 *.report.json
