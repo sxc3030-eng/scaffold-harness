@@ -58,13 +58,15 @@ Chaque adaptateur doit renseigner `latency_ms`, `input_tokens`, `output_tokens`.
 **Sans le coût, le rapport ne peut pas dire « vous avez doublé la facture pour
 rien »** — et c'est un de ses arguments les plus forts.
 
-## Phase 3 — Le rapport
+## Phase 3 — Le rapport *(fait)*
 
-- [ ] Rendu JSON signé (sha256 du contenu, révisions de modèles, hash du jeu)
-- [ ] Rendu HTML lisible par un client
-- [ ] **Le tableau des déviations en pièce maîtresse**, pas en annexe
-- [ ] « Aucune différence significative » affichable en grand
-- [ ] Section reproduction : la commande exacte
+- [x] Rendu JSON signé (sha256 du contenu, du jeu, du build de modèle)
+- [x] Rendu HTML bilingue autonome, lisible sans JavaScript
+- [x] **Le tableau des déviations en pièce maîtresse**, pas en annexe
+- [x] GAIN / PERTE / NON CONCLUANT, l'abstention affichée aussi grand que le reste
+- [x] Détail par question, destructions triées en tête, filtres
+- [x] Section « ce que ce rapport mesure » + FAQ
+- [x] Section reproduction : la commande exacte
 
 ## Phase 4 — CLI *(fait, sauf reprise)*
 
@@ -72,8 +74,13 @@ rien »** — et c'est un de ses arguments les plus forts.
 - [x] Chargeur JSONL + empreinte du jeu de questions
 - [x] Code de sortie 2 si la couche détruit plus qu'elle n'améliore (barrière CI)
 - [x] Icône : `assets/icon.ico` (7 tailles) + SVG, générés sans dépendance
+- [x] **Reprise sur incident** — journal append-only par chemin, manifeste qui
+      ignore `pid` et horodatages. Vérifié en réel: 48,9 s au premier
+      lancement, 0,21 s au second, résultat identique
+- [x] Compteur de pannes du fournisseur — au-delà de 5 %, le verdict s'abstient
+- [x] Audit du noteur — deux correcteurs, chaque désaccord signalé. Retrouve
+      les 43 réponses justes rejetées par le correcteur d'un système réel
 - [ ] Pont lm-eval
-- [ ] Reprise sur incident : ledgers incrémentaux
 
 > **Reprise obligatoire dès le départ.** Sur `mat-9f`, l'empreinte du manifeste
 > incluait le `pid`, donc aucune campagne interrompue ne pouvait reprendre —

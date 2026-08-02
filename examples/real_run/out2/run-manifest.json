@@ -1,0 +1,33 @@
+{
+  "baseline": {
+    "host": "http://127.0.0.1:11434",
+    "keep_alive": "10m",
+    "kind": "OllamaChat",
+    "max_tokens": 64,
+    "model": "llama3.2:latest",
+    "model_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+    "provider": "ollama",
+    "system_sha256": "d8bd459e40e112039bf7f155968f6c47fd75bd6899beecf03aaa35fc4903fead",
+    "temperature": 0.0
+  },
+  "campaign_sha256": "315b52c9203ed7cf03e522e912d0a0f01f77b998d06e906db989ad3197035dc0",
+  "question_count": 24,
+  "questions_sha256": "03cee9b46e2df04ebef8f6669036c275f2c92473365c799960587db533cd16d5",
+  "reference": {
+    "callable": "executor",
+    "kind": "PythonPath",
+    "metadata": {},
+    "name": "executor",
+    "version": null
+  },
+  "scorer": "json_answer",
+  "variants": {
+    "verifier-scaffold": {
+      "callable": "verify_scaffold",
+      "kind": "PythonPath",
+      "metadata": {},
+      "name": "verifier-scaffold",
+      "version": null
+    }
+  }
+}

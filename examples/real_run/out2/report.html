@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scaffold report</title><style>
+:root { color-scheme: light dark; }
+body { font: 15px/1.55 system-ui, -apple-system, Segoe UI, sans-serif;
+       max-width: 62rem; margin: 2rem auto; padding: 0 1.2rem; }
+h1 { font-size: 1.5rem; margin-bottom: .2rem; }
+.sub { opacity: .65; font-size: .9rem; margin-bottom: 1.6rem; }
+.verdict { border-left: 5px solid; padding: .9rem 1.1rem; margin: 1rem 0 1.4rem;
+           border-radius: 4px; font-size: 1.02rem; }
+.verdict.loss         { border-color: #c0392b; background: rgba(192,57,43,.09); }
+.verdict.gain         { border-color: #1e8449; background: rgba(30,132,73,.09); }
+.verdict.inconclusive { border-color: #b7950b; background: rgba(183,149,11,.10); }
+.tag { display: inline-block; font-weight: 700; letter-spacing: .08em;
+       font-size: .74rem; padding: .18rem .5rem; border-radius: 3px;
+       margin-right: .55rem; vertical-align: .08rem; color: #fff; }
+.tag.loss { background: #c0392b; } .tag.gain { background: #1e8449; }
+.tag.inconclusive { background: #b7950b; }
+.name { font-weight: 600; }
+table { border-collapse: collapse; width: 100%; margin: .6rem 0 1.8rem;
+        font-variant-numeric: tabular-nums; }
+th, td { padding: .5rem .7rem; text-align: right;
+         border-bottom: 1px solid rgba(128,128,128,.28); }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-size: .76rem; text-transform: uppercase; letter-spacing: .04em;
+           opacity: .7; }
+.destroyed { color: #c0392b; font-weight: 600; }
+.improved  { color: #1e8449; font-weight: 600; }
+.muted { opacity: .6; }
+h2 { font-size: 1.05rem; margin-top: 2.2rem; }
+.note { font-size: .87rem; opacity: .72; margin: -.35rem 0 .9rem; }
+p { margin: .55rem 0; }
+code, pre { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+pre { background: rgba(128,128,128,.10); padding: .8rem; border-radius: 4px;
+      overflow-x: auto; }
+details { border-bottom: 1px solid rgba(128,128,128,.24); padding: .55rem 0; }
+summary { cursor: pointer; font-weight: 600; }
+details p { margin: .5rem 0 .2rem; opacity: .85; }
+.cases td { vertical-align: top; font-size: .88rem; }
+.cases td.q { text-align: left; max-width: 26rem; }
+.cases .ans { font-family: ui-monospace, Consolas, monospace; }
+.pill { font-size: .7rem; font-weight: 700; padding: .12rem .42rem;
+        border-radius: 3px; color: #fff; white-space: nowrap; }
+.pill.destroyed { background: #c0392b; } .pill.improved { background: #1e8449; }
+.pill.neutral_change { background: #b7950b; }
+.pill.unchanged { background: rgba(128,128,128,.55); }
+.filters { display: flex; gap: .4rem; margin: .3rem 0 .8rem; flex-wrap: wrap; }
+.filters button { font: inherit; font-size: .82rem; padding: .25rem .7rem;
+                  border: 1px solid rgba(128,128,128,.45); background: none;
+                  color: inherit; border-radius: 999px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: rgba(128,128,128,.22);
+                                       font-weight: 600; }
+tbody.filtered tr { display: none; }
+tbody.filtered tr.match { display: table-row; }
+footer { margin-top: 2.5rem; font-size: .78rem; opacity: .6; word-break: break-all; }
+.switch { float: right; font-size: .82rem; }
+.switch a { text-decoration: none; opacity: .7; }
+[data-lang] { display: none; } :root[lang="en"] [data-lang="en"],
+:root[lang="fr"] [data-lang="fr"] { display: revert; }
+</style></head><body>
+<div data-lang="en">
+<div class="switch"><a href="#" data-switch>Français</a></div>
+<h1>What did your layer actually change?</h1>
+<div class="sub">24 paired cases · set: exact rational arithmetic — 24 questions
+<span class="muted">(03cee9b46e2df04e)</span></div>
+
+<div class="verdict inconclusive"><span class="tag inconclusive">INCONCLUSIVE</span><span class="name">verifier-scaffold</span> — No measurable difference (+0.0%, p=1.000). This sample is too small to conclude.</div>
+
+<h2>What your layer changed</h2>
+<div class="note">Compared against: deterministic executor. A change that does not improve the answer is a change that costs.</div>
+<table><thead><tr>
+<th>variant</th><th>changed</th>
+<th>improved</th><th>destroyed</th>
+<th>neutral</th><th>net</th>
+</tr></thead><tbody><tr><td>verifier-scaffold</td><td>24</td><td class='improved'>0</td><td class='destroyed'>24</td><td class='muted'>0</td><td class='destroyed'>-24</td></tr></tbody></table>
+
+<h2>Accuracy and coverage</h2>
+<div class="note">Intervals are Wilson 95%. A wide interval means the sample cannot settle the question — that is missing data, not a flaw in the system being measured.</div>
+<table><thead><tr>
+<th>path</th><th>correct</th>
+<th>accuracy</th><th>95% CI</th>
+<th>coverage</th><th>refused</th>
+<th>failed</th>
+</tr></thead><tbody><tr><td>bare model (reference)</td><td>0/24</td><td>0.0%</td><td class='muted'>[0.0% – 13.8%]</td><td>100.0%</td><td>0</td><td>0</td></tr><tr><td>verifier-scaffold</td><td>0/24</td><td>0.0%</td><td class='muted'>[0.0% – 13.8%]</td><td>100.0%</td><td>0</td><td>0</td></tr></tbody></table>
+
+<h2>Cost</h2>
+<table><thead><tr>
+<th>variant</th><th>tokens</th>
+<th>p95 latency</th><th>p95 absolute</th>
+<th>McNemar</th>
+</tr></thead><tbody><tr><td>verifier-scaffold</td><td>×1.96</td><td>×0.26</td><td>846 ms</td><td class='muted'>p=1.000</td></tr></tbody></table>
+
+
+<section>
+<h2>Question by question</h2>
+<div class="note">Destroyed answers first. This is where a number becomes a decision: read three of them and you will know whether the layer is worth keeping.</div>
+
+<div class="filters"><button type="button" data-filter="all" aria-pressed="true">all</button><button type="button" data-filter="destroyed" aria-pressed="false">destroyed</button><button type="button" data-filter="improved" aria-pressed="false">improved</button><button type="button" data-filter="changed" aria-pressed="false">changed</button></div>
+<table class="cases"><thead><tr>
+<th>question</th><th>reference</th>
+<th>your layer</th><th>expected</th>
+<th></th></tr></thead><tbody><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 21/20+2/23-17/12</td><td class="ans">-193/690</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-193/690</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 46/18+10/29-10/12</td><td class="ans">1079/522</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">1079/522</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 19/14+5/24-36/16</td><td class="ans">-115/168</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-115/168</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 9/8+17/35-10/17</td><td class="ans">4867/4760</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">4867/4760</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 22/23+23/20-20/4</td><td class="ans">-1331/460</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-1331/460</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 47/20+13/19-13/10</td><td class="ans">659/380</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">659/380</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 42/17+3/38-22/13</td><td class="ans">7199/8398</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">7199/8398</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/20+21/15-19/22</td><td class="ans">147/110</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">147/110</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 47/25+29/16-26/22</td><td class="ans">11047/4400</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">11047/4400</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/6+12/51-13/6</td><td class="ans">25/34</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">25/34</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 21/20+14/50-22/16</td><td class="ans">-9/200</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-9/200</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 32/11+31/48-17/18</td><td class="ans">4135/1584</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">4135/1584</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 26/27+31/37-7/13</td><td class="ans">16394/12987</td><td class="ans">{&quot;answer&quot;: &quot;1011/1483&quot;}</td><td class="ans muted">16394/12987</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 28/29+18/19-9/5</td><td class="ans">311/2755</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">311/2755</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 39/20+30/26-26/8</td><td class="ans">-19/130</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-19/130</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 39/22+21/43-28/11</td><td class="ans">-269/946</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-269/946</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 25/12+12/19-6/15</td><td class="ans">2639/1140</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">2639/1140</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 23/3+4/49-16/4</td><td class="ans">551/147</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">551/147</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/16+19/16-13/15</td><td class="ans">317/240</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">317/240</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 20/4+26/38-12/18</td><td class="ans">286/57</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">286/57</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 38/15+21/11-34/23</td><td class="ans">11249/3795</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">11249/3795</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 37/17+12/37-9/22</td><td class="ans">28945/13838</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">28945/13838</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 11/23+25/49-14/12</td><td class="ans">-1205/6762</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-1205/6762</td><td><span class="pill destroyed">destroyed</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 41/14+8/32-24/11</td><td class="ans">307/308</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">307/308</td><td><span class="pill destroyed">destroyed</span></td></tr></tbody></table>
+</section>
+<h2>What this report measures</h2><p>Benchmarks tell you how a <em>model</em> scores. This report tells you what the layer you built <em>on top of it</em> — an agent, a RAG pipeline, a router, a verification step — actually adds or removes.</p><p>Every question is answered twice: once by the bare model, once through your layer. Because the two runs are paired on the same questions, the report can count the answers your layer <strong>changed</strong>, and say whether each change made things better or worse. An aggregate score cannot do that: a layer that fixes 8 answers and breaks 5 looks like “+3” and hides the 13 questions it touched.</p>
+<h2>Questions</h2><details><summary>Why does it sometimes refuse to conclude?</summary><p>Because a difference can be real and still be unprovable at this sample size. Four losses and zero gains looks decisive, but the exact test gives p = 0.125 — one run in eight would show that by chance alone. A tool that always finds something is worth nothing.</p></details><details><summary>What does “destroyed” mean exactly?</summary><p>Your layer changed an answer that the reference path had right, and the new answer is wrong. It is counted separately from “improved” — the reverse case — because the two cancel out in any aggregate score and tell you completely different things.</p></details><details><summary>What is the reference path?</summary><p>By default, the bare model — everyone has one. If you also have a deterministic path (a calculator, a solver, a database lookup), point the harness at it: changes are then counted against something known to be right, which is far sharper.</p></details><details><summary>Is a refusal the same as a wrong answer?</summary><p>No, and the distinction matters. A system that refuses 90% of questions and a system that answers 90% of them wrongly score the same on accuracy alone. Coverage separates them.</p></details><details><summary>Can I trust these numbers?</summary><p>You can check them. The report carries a hash of its own contents, of the question set, and of every path that ran. Nothing is promoted automatically, and the reproduction command is included.</p></details>
+<h2>Reproduce this</h2><pre>cd examples/real_run &amp;&amp; scaffold-harness run config.json --out out/</pre>
+</div><div data-lang="fr">
+<div class="switch"><a href="#" data-switch>English</a></div>
+<h1>Qu&#x27;est-ce que votre couche a réellement changé ?</h1>
+<div class="sub">24 cas appariés · jeu : exact rational arithmetic — 24 questions
+<span class="muted">(03cee9b46e2df04e)</span></div>
+
+<div class="verdict inconclusive"><span class="tag inconclusive">NON CONCLUANT</span><span class="name">verifier-scaffold</span> — Aucune différence mesurable (+0.0%, p=1.000). L&#x27;échantillon est trop petit pour conclure.</div>
+
+<h2>Ce que votre couche a changé</h2>
+<div class="note">Comparé à : deterministic executor. Une modification qui n&#x27;améliore pas la réponse est une modification qui coûte.</div>
+<table><thead><tr>
+<th>variante</th><th>modifiées</th>
+<th>améliorées</th><th>détruites</th>
+<th>neutres</th><th>net</th>
+</tr></thead><tbody><tr><td>verifier-scaffold</td><td>24</td><td class='improved'>0</td><td class='destroyed'>24</td><td class='muted'>0</td><td class='destroyed'>-24</td></tr></tbody></table>
+
+<h2>Exactitude et couverture</h2>
+<div class="note">Les intervalles sont ceux de Wilson à 95 %. Un intervalle large signifie que l&#x27;échantillon ne peut pas trancher — c&#x27;est un manque de données, pas un défaut du système mesuré.</div>
+<table><thead><tr>
+<th>chemin</th><th>justes</th>
+<th>exactitude</th><th>IC 95 %</th>
+<th>couverture</th><th>refus</th>
+<th>pannes</th>
+</tr></thead><tbody><tr><td>modèle nu (référence)</td><td>0/24</td><td>0.0%</td><td class='muted'>[0.0% – 13.8%]</td><td>100.0%</td><td>0</td><td>0</td></tr><tr><td>verifier-scaffold</td><td>0/24</td><td>0.0%</td><td class='muted'>[0.0% – 13.8%]</td><td>100.0%</td><td>0</td><td>0</td></tr></tbody></table>
+
+<h2>Coût</h2>
+<table><thead><tr>
+<th>variante</th><th>tokens</th>
+<th>latence p95</th><th>p95 absolu</th>
+<th>McNemar</th>
+</tr></thead><tbody><tr><td>verifier-scaffold</td><td>×1.96</td><td>×0.26</td><td>846 ms</td><td class='muted'>p=1.000</td></tr></tbody></table>
+
+
+<section>
+<h2>Question par question</h2>
+<div class="note">Les réponses détruites d&#x27;abord. C&#x27;est ici qu&#x27;un chiffre devient une décision : lisez-en trois et vous saurez si la couche mérite d&#x27;être gardée.</div>
+
+<div class="filters"><button type="button" data-filter="all" aria-pressed="true">tout</button><button type="button" data-filter="destroyed" aria-pressed="false">détruites</button><button type="button" data-filter="improved" aria-pressed="false">améliorées</button><button type="button" data-filter="changed" aria-pressed="false">modifiées</button></div>
+<table class="cases"><thead><tr>
+<th>question</th><th>référence</th>
+<th>votre couche</th><th>attendu</th>
+<th></th></tr></thead><tbody><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 21/20+2/23-17/12</td><td class="ans">-193/690</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-193/690</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 46/18+10/29-10/12</td><td class="ans">1079/522</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">1079/522</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 19/14+5/24-36/16</td><td class="ans">-115/168</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-115/168</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 9/8+17/35-10/17</td><td class="ans">4867/4760</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">4867/4760</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 22/23+23/20-20/4</td><td class="ans">-1331/460</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-1331/460</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 47/20+13/19-13/10</td><td class="ans">659/380</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">659/380</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 42/17+3/38-22/13</td><td class="ans">7199/8398</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">7199/8398</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/20+21/15-19/22</td><td class="ans">147/110</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">147/110</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 47/25+29/16-26/22</td><td class="ans">11047/4400</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">11047/4400</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/6+12/51-13/6</td><td class="ans">25/34</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">25/34</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 21/20+14/50-22/16</td><td class="ans">-9/200</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-9/200</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 32/11+31/48-17/18</td><td class="ans">4135/1584</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">4135/1584</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 26/27+31/37-7/13</td><td class="ans">16394/12987</td><td class="ans">{&quot;answer&quot;: &quot;1011/1483&quot;}</td><td class="ans muted">16394/12987</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 28/29+18/19-9/5</td><td class="ans">311/2755</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">311/2755</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 39/20+30/26-26/8</td><td class="ans">-19/130</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-19/130</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 39/22+21/43-28/11</td><td class="ans">-269/946</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-269/946</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 25/12+12/19-6/15</td><td class="ans">2639/1140</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">2639/1140</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 23/3+4/49-16/4</td><td class="ans">551/147</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">551/147</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 16/16+19/16-13/15</td><td class="ans">317/240</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">317/240</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 20/4+26/38-12/18</td><td class="ans">286/57</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">286/57</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 38/15+21/11-34/23</td><td class="ans">11249/3795</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">11249/3795</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 37/17+12/37-9/22</td><td class="ans">28945/13838</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">28945/13838</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 11/23+25/49-14/12</td><td class="ans">-1205/6762</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">-1205/6762</td><td><span class="pill destroyed">détruite</span></td></tr><tr data-label="destroyed"><td class="q">Compute exactly and give a single reduced fraction: 41/14+8/32-24/11</td><td class="ans">307/308</td><td class="ans">To compute the expression, we need to fi…</td><td class="ans muted">307/308</td><td><span class="pill destroyed">détruite</span></td></tr></tbody></table>
+</section>
+<h2>Ce que ce rapport mesure</h2><p>Les benchmarks vous disent le score d'un <em>modèle</em>. Ce rapport vous dit ce que la couche que vous avez construite <em>par-dessus</em> — un agent, une chaîne RAG, un routeur, une étape de vérification — ajoute ou retire réellement.</p><p>Chaque question reçoit deux réponses : celle du modèle nu, et celle qui passe par votre couche. Comme les deux passages sont appariés sur les mêmes questions, le rapport peut compter les réponses que votre couche a <strong>modifiées</strong>, et dire si chaque modification a amélioré ou dégradé le résultat. Un score agrégé ne le peut pas : une couche qui corrige 8 réponses et en casse 5 affiche « +3 » et masque les 13 questions qu'elle a touchées.</p>
+<h2>Questions</h2><details><summary>Pourquoi refuse-t-il parfois de conclure ?</summary><p>Parce qu&#x27;une différence peut être réelle et rester indémontrable à cette taille d&#x27;échantillon. Quatre pertes et zéro gain semble net, mais le test exact donne p = 0,125 — une fois sur huit, le hasard seul produirait ça. Un outil qui trouve toujours quelque chose ne vaut rien.</p></details><details><summary>Que veut dire « détruite » exactement ?</summary><p>Votre couche a modifié une réponse que le chemin de référence avait juste, et la nouvelle est fausse. C&#x27;est compté séparément des « améliorées » — le cas inverse — parce que les deux s&#x27;annulent dans un score agrégé et ne disent pas du tout la même chose.</p></details><details><summary>Qu&#x27;est-ce que le chemin de référence ?</summary><p>Par défaut, le modèle nu — tout le monde en a un. Si vous disposez aussi d&#x27;un chemin déterministe (calculateur, solveur, requête en base), branchez-le : les modifications sont alors comptées contre quelque chose dont on sait que c&#x27;est juste, ce qui est bien plus tranchant.</p></details><details><summary>Un refus est-il équivalent à une mauvaise réponse ?</summary><p>Non, et la distinction compte. Un système qui refuse 90 % des questions et un système qui y répond mal à 90 % obtiennent la même exactitude. C&#x27;est la couverture qui les sépare.</p></details><details><summary>Puis-je faire confiance à ces chiffres ?</summary><p>Vous pouvez les vérifier. Le rapport porte l&#x27;empreinte de son propre contenu, du jeu de questions, et de chaque chemin exécuté. Rien n&#x27;est promu automatiquement, et la commande de reproduction est incluse.</p></details>
+<h2>Reproduire</h2><pre>cd examples/real_run &amp;&amp; scaffold-harness run config.json --out out/</pre>
+</div>
+<footer>signature: 02192d87b9891792139b9303b790683c6f8e7fc028d06d8f8ebfb134513c5519</footer>
+<script>
+(function () {
+  var root = document.documentElement;
+  var wanted = (navigator.language || 'en').slice(0, 2);
+  if (wanted !== 'fr' && wanted !== 'en') { wanted = 'en'; }
+  root.setAttribute('lang', wanted);
+  document.addEventListener('click', function (event) {
+    var trigger = event.target.closest('[data-switch]');
+    if (!trigger) { return; }
+    event.preventDefault();
+    root.setAttribute('lang', root.getAttribute('lang') === 'fr' ? 'en' : 'fr');
+  });
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-filter]');
+    if (!button) { return; }
+    var wanted = button.getAttribute('data-filter');
+    var body = button.closest('section').querySelector('tbody');
+    button.parentNode.querySelectorAll('button').forEach(function (other) {
+      other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
+    });
+    if (wanted === 'all') { body.classList.remove('filtered'); return; }
+    body.classList.add('filtered');
+    body.querySelectorAll('tr').forEach(function (line) {
+      var label = line.getAttribute('data-label') || '';
+      var hit = wanted === 'changed' ? label !== 'unchanged' : label === wanted;
+      line.classList.toggle('match', hit);
+    });
+  });
+})();
+</script>
+</body></html>

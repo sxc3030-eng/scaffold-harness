@@ -28,6 +28,23 @@ def perfect(question: str) -> str:
     return question.split("+")[0]
 
 
+_CALLS = {"n": 0}
+
+
+def reset_counter() -> None:
+    _CALLS["n"] = 0
+
+
+def calls_made() -> int:
+    return _CALLS["n"]
+
+
+def counted(question: str) -> str:
+    """Compte les appels réels: la preuve qu'une reprise ne repaie rien."""
+    _CALLS["n"] += 1
+    return question.split("+")[0]
+
+
 def wrecker(question: str) -> str:
     value = int(question.split("+")[0])
     return "BAD" if value < 6 else str(value)
@@ -113,6 +130,53 @@ class RunTests(unittest.TestCase):
             self.assertIn("Ce que votre couche a changé", page)
             self.assertNotIn("What your layer changed", page)
 
+
+
+class ResumeTests(unittest.TestCase):
+    def test_a_second_run_reuses_the_journal_instead_of_recalling(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_questions(root)
+            path = root / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": str(root / "questions.jsonl"),
+                        "baseline": {"adapter": "python", "import": "test_cli:counted"},
+                        "variants": {
+                            "layer": {"adapter": "python", "import": "test_cli:counted"}
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            reset_counter()
+            main(["run", str(path), "--out", str(root / "o")])
+            first = calls_made()
+            self.assertEqual(first, 24)  # 12 questions x 2 chemins
+            main(["run", str(path), "--out", str(root / "o")])
+            self.assertEqual(calls_made(), first)  # aucun appel supplémentaire
+
+    def test_changing_the_questions_refuses_to_resume(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            write_questions(root, 12)
+            path = root / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "questions": str(root / "questions.jsonl"),
+                        "baseline": {"adapter": "python", "import": "test_cli:perfect"},
+                        "variants": {
+                            "layer": {"adapter": "python", "import": "test_cli:perfect"}
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            main(["run", str(path), "--out", str(root / "o")])
+            write_questions(root, 20)  # le jeu a changé
+            self.assertEqual(main(["run", str(path), "--out", str(root / "o")]), 4)
 
 if __name__ == "__main__":
     unittest.main()

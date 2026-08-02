@@ -20,6 +20,7 @@ from typing import Any
 
 from .adapters import AnthropicChat, OllamaChat, OpenAICompatibleChat, PythonPath
 from .core import Case, compare
+from .journal import Journal, ResumeError
 from .provenance import question_set_digest, write_atomic
 from .report import build, headline, render
 from .scoring import exact_rational, json_field, multiple_choice, normalized_text
@@ -126,19 +127,39 @@ def run_config(config: Mapping[str, Any], out: Path, lang: str | None) -> int:
     variants = {name: build_path(spec) for name, spec in config["variants"].items()}
     reference = build_path(config["reference"]) if config.get("reference") else None
 
-    print(f"{len(cases)} questions · {len(variants) + 1} chemins…", file=sys.stderr)
-    comparison = compare(
-        cases,
-        baseline,
-        variants,
-        scorer,
-        reference=reference,
-        reference_name=str(config.get("reference_name", "baseline")),
-    )
-
     def descriptor(path: Any) -> dict[str, Any]:
         getter = getattr(path, "descriptor", None)
         return getter() if callable(getter) else {"kind": type(path).__name__}
+
+    # Journal de reprise, activé par défaut. Un run interrompu ne doit jamais
+    # repayer un appel déjà payé: sur une campagne de plusieurs heures contre
+    # une API, c'est l'incident le plus coûteux qui puisse arriver.
+    journal = Journal(out)
+    manifest = {
+        "questions_sha256": question_set["sha256"],
+        "question_count": len(cases),
+        "scorer": scorer_name,
+        "baseline": descriptor(baseline),
+        "reference": descriptor(reference) if reference is not None else None,
+        "variants": {name: descriptor(path) for name, path in variants.items()},
+    }
+    resuming = journal.guard(manifest)
+    already = journal.progress()
+    if resuming and already:
+        summary = " · ".join(f"{k} {v}/{len(cases)}" for k, v in already.items())
+        print(f"reprise : {summary}", file=sys.stderr)
+
+    print(f"{len(cases)} questions · {len(variants) + 1} chemins…", file=sys.stderr)
+    comparison = compare(
+        cases,
+        journal.wrap("baseline", baseline),
+        {name: journal.wrap(name, path) for name, path in variants.items()},
+        scorer,
+        reference=(
+            journal.wrap("reference", reference) if reference is not None else None
+        ),
+        reference_name=str(config.get("reference_name", "baseline")),
+    )
 
     report = build(
         comparison,
@@ -192,6 +213,9 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as error:
         print(f"configuration: {error}", file=sys.stderr)
         return 3
+    except ResumeError as error:
+        print(f"reprise impossible: {error}", file=sys.stderr)
+        return 4
     except FileNotFoundError as error:
         print(f"fichier introuvable: {error}", file=sys.stderr)
         return 3
