@@ -20,6 +20,19 @@ changed **4316** answers from its deterministic reference path: 4316
 degradations, zero improvements. The aggregate score looked acceptable. No
 classic benchmark could see it, because none compares answers pairwise.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/accuracy-dark.svg">
+  <img alt="Horizontal bar chart of exact accuracy over 800 sealed questions. Deterministic executor 100%, llm_nexus_adaptive 87.25%, llm_experts 81.00%, llm_memory 7.88%, llm_direct 6.38%." src="docs/img/accuracy-light.svg">
+</picture>
+
+The bare model answers 6.38 % correctly; handed a deterministic proposal it
+reaches 81 %. That case for tool use is real. The gap nobody was looking at is
+the other one — the executor alone is at **100 %**, and every arm routed through
+the model gives some of it back.
+
+**[Full findings, with the failure-mode breakdown and every defect this
+surfaced →](docs/FINDINGS.md)**
+
 ## Quick start
 
 ```bash
