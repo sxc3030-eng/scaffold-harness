@@ -149,7 +149,14 @@ reporting, resume and CLI are implemented and tested (98 tests, no network or GP
 required). Validated by replaying two known real campaigns and reproducing their
 published numbers.
 
-Licence: to be decided before publication — intended permissive.
+## Licence
+
+**FSL-1.1-ALv2** — Functional Source License. Read it, run it, modify it, use it
+inside your company, in research or in teaching. The one thing you may not do is
+offer it as a commercial product or service that competes with it.
+
+It converts automatically to **Apache 2.0 two years after each release**, so
+nothing you build on it is locked away for good.
 
 ---
 
@@ -216,3 +223,12 @@ détail par question                 destructions en tête
 Rapports en HTML autonome — bilingue, imprimable, aucune ressource externe — et
 un jumeau JSON signé. Code de sortie `2` quand une couche détruit plus qu'elle
 n'améliore : la mesure peut servir de barrière d'intégration continue.
+
+## Licence
+
+**FSL-1.1-ALv2**. Lisez-le, exécutez-le, modifiez-le, utilisez-le dans votre
+entreprise, en recherche ou en enseignement. La seule chose interdite est d'en
+faire un produit ou un service commercial qui lui fait concurrence.
+
+Elle bascule automatiquement en **Apache 2.0 deux ans après chaque version** :
+rien de ce que vous construisez dessus n'est verrouillé pour toujours.
