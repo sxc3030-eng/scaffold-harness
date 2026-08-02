@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scaffold-harness"
+version = "0.1.0"
+description = "Measure whether the layer you built on top of an LLM helps or hurts."
+readme = "README.md"
+requires-python = ">=3.10"
+# Aucune dépendance d'exécution, volontairement: HTTP via urllib, statistiques
+# via math. Un outil de mesure ne doit pas imposer un arbre de dépendances à
+# celui qui veut vérifier un chiffre.
+dependencies = []
+
+[project.optional-dependencies]
+hf = ["transformers>=4.40", "torch>=2.2"]
+
+[project.scripts]
+scaffold-harness = "scaffold_harness.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 90
+target-version = "py310"
