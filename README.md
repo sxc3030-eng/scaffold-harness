@@ -145,7 +145,7 @@ destroys more than it improves, so it can act as a CI gate.
 ## Status
 
 **0.1.0 — early, API unstable.** Core, statistics, provenance, scoring, adapters,
-reporting, resume and CLI are implemented and tested (98 tests, no network or GPU
+reporting, resume and CLI are implemented and tested (100 tests, no network or GPU
 required). Validated by replaying two known real campaigns and reproducing their
 published numbers.
 
